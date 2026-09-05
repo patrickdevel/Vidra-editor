@@ -37,6 +37,10 @@ html,body{height:100%;}
 body{
   margin:0;background:radial-gradient(circle at 20% -10%, #1c2029 0%, var(--bg-base) 55%);color:var(--text);font-family:var(--font-ui);
   font-size:14px;overflow:hidden;
+  -webkit-user-select:none; user-select:none;
+}
+input[type="text"], input[type="search"], textarea, select, [contenteditable]{
+  -webkit-user-select:text; user-select:text;
 }
 button{font-family:var(--font-ui);cursor:pointer;}
 input,select{font-family:var(--font-ui);}
@@ -291,6 +295,18 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 }
 .restore-banner button{background:none;border:none;color:var(--text-faint);font-size:16px;padding:0;flex-shrink:0;}
 
+/* ---------- Kontextmenü (Rechtsklick) ---------- */
+.context-menu{
+  position:fixed;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:var(--radius-m);box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:100;
+  min-width:160px;padding:4px;display:flex;flex-direction:column;
+}
+.context-menu-item{
+  background:none;border:none;color:var(--text);padding:8px 12px;text-align:left;
+  font-size:12.5px;border-radius:var(--radius-s);cursor:pointer;width:100%;
+}
+.context-menu-item:hover{background:var(--bg-elevated-2);}
+
 /* ---------- Mobile nav ---------- */
 .mobile-nav{display:none;}
 
@@ -464,6 +480,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     </div>
   </div>
 </div>
+
+<div class="context-menu hidden" id="contextMenu"></div>
 
 <script>
 (function(){
@@ -727,12 +745,7 @@ function timelineLength(){
   return Math.max(vt, overlaysAudioMaxEnd());
 }
 
-/* ===================== Vereinheitlichtes Keyframe-System =====================
-   Statt Keyframes pro einzelner Einstellung gibt es EINE Keyframe-Liste pro
-   Clip/Overlay. Jeder Keyframe speichert einen Schnappschuss ALLER relevanten
-   Werte (Größe/Zoom, Position, Effekte bzw. Transformation). Ein Klick auf
-   "◆ Keyframe" in der Leiste unter der Vorschau reicht, um alles auf einmal
-   zu animieren. =============================================================== */
+/* ===================== Vereinheitlichtes Keyframe-System ===================== */
 function computeEffectValues(clip, localTime){
   if(localTime===undefined) localTime = localTimeForClipAtPlayhead(clip);
   const kfs = clip.keyframes;
@@ -815,6 +828,29 @@ function removeKeyframeNow(){
     const t=localTimeForOverlay(o);
     const idx=o.keyframes.findIndex(k=>Math.abs(k.t-t)<0.08);
     if(idx>=0) o.keyframes.splice(idx,1);
+  } else return;
+  queueAutosave(); renderAll();
+}
+function toggleKeyframeAtPlayhead(){
+  if(state.selection.type==='video'){
+    const clip=selectedClip(); if(!clip||clip.needsRelink) return;
+    const t=localTimeForClipAtPlayhead(clip);
+    const existing = clip.keyframes.find(k=>Math.abs(k.t-t)<0.08);
+    if(existing){
+      clip.keyframes.splice(clip.keyframes.indexOf(existing),1);
+    } else {
+      upsertObjectKeyframe(clip, t, {}, ()=>computeEffectValues(clip, t));
+    }
+  } else if(state.selection.type==='overlay'){
+    const o=selectedOverlay(); if(!o) return;
+    if(state.playheadTime<o.start || state.playheadTime>o.end) return;
+    const t=localTimeForOverlay(o);
+    const existing = o.keyframes.find(k=>Math.abs(k.t-t)<0.08);
+    if(existing){
+      o.keyframes.splice(o.keyframes.indexOf(existing),1);
+    } else {
+      upsertObjectKeyframe(o, t, {}, ()=>computeOverlayEffective(o, t));
+    }
   } else return;
   queueAutosave(); renderAll();
 }
@@ -918,6 +954,11 @@ function setCanvasAspect(key){
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 let bufCanvasA=null, bufCanvasB=null;
+
+// Hintergrundfarbe im Editor (helleres Grau) – beim Export schwarz
+const EDITOR_BG = '#2c313d';
+function getBgColor(){ return state.isExporting ? '#000' : EDITOR_BG; }
+
 function getBuf(name){
   let c = name==='A'?bufCanvasA:bufCanvasB;
   if(!c || c.width!==canvas.width || c.height!==canvas.height){
@@ -927,7 +968,8 @@ function getBuf(name){
   const bctx = c.getContext('2d');
   bctx.setTransform(1,0,0,1,0,0);
   bctx.clearRect(0,0,c.width,c.height);
-  bctx.fillStyle='#000'; bctx.fillRect(0,0,c.width,c.height);
+  bctx.fillStyle = getBgColor();
+  bctx.fillRect(0,0,c.width,c.height);
   return c;
 }
 function syncClipTimeForRender(clip, localTime){
@@ -943,7 +985,8 @@ function renderFrame(){
   const fullTotal = Math.max(videoTotal, overlaysAudioMaxEnd());
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = getBgColor();
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
   if(fullTotal<=0){
     ctx.fillStyle='#5c6272'; ctx.font='20px "Space Grotesk"'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
@@ -1386,6 +1429,16 @@ window.addEventListener('keydown', e=>{
     else if(state.selection.type==='overlay') removeOverlay(state.selection.id);
     e.preventDefault(); return;
   }
+  if(e.key==='s' || e.key==='S'){
+    e.preventDefault();
+    splitClipAtPlayhead();
+    return;
+  }
+  if(e.key==='k' || e.key==='K'){
+    e.preventDefault();
+    toggleKeyframeAtPlayhead();
+    return;
+  }
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
     const info = currentFrameContext();
     if(info){
@@ -1411,6 +1464,33 @@ function setZoom(px){
 }
 document.getElementById('zoomIn').addEventListener('click', ()=>setZoom(PX_PER_SEC*1.3));
 document.getElementById('zoomOut').addEventListener('click', ()=>setZoom(PX_PER_SEC/1.3));
+
+/* ===================== Kontextmenü (Rechtsklick) ===================== */
+const contextMenuEl = document.getElementById('contextMenu');
+function showContextMenu(x, y, items){
+  contextMenuEl.innerHTML='';
+  items.forEach(item=>{
+    const btn=document.createElement('button');
+    btn.className='context-menu-item';
+    btn.textContent=item.label;
+    btn.addEventListener('click', ()=>{
+      hideContextMenu();
+      item.action();
+    });
+    contextMenuEl.appendChild(btn);
+  });
+  contextMenuEl.style.left = Math.min(x, window.innerWidth-200)+'px';
+  contextMenuEl.style.top = Math.min(y, window.innerHeight- items.length*36 - 10)+'px';
+  contextMenuEl.classList.remove('hidden');
+}
+function hideContextMenu(){ contextMenuEl.classList.add('hidden'); }
+document.addEventListener('click', hideContextMenu);
+document.addEventListener('contextmenu', (e)=>{
+  if(!contextMenuEl.classList.contains('hidden')){
+    e.preventDefault();
+    hideContextMenu();
+  }
+});
 
 /* ===================== Medien hinzufügen / entfernen (Video) ===================== */
 document.getElementById('mediaInput').addEventListener('change', e=>{
@@ -1598,7 +1678,14 @@ function renderMediaList(){
       const input = document.createElement('input');
       input.type='file'; input.accept='video/*'; input.hidden=true;
       input.addEventListener('change', ()=>{ if(input.files[0]) relinkClip(c.id, input.files[0]); });
-      lbl.appendChild(input); row.appendChild(lbl); list.appendChild(row);
+      lbl.appendChild(input); row.appendChild(lbl);
+      row.addEventListener('contextmenu', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, [
+          {label:'Clip entfernen', action:()=>removeClip(c.id)}
+        ]);
+      });
+      list.appendChild(row);
       return;
     }
     const item = document.createElement('div');
@@ -1614,6 +1701,17 @@ function renderMediaList(){
     item.addEventListener('click', (e)=>{
       if(e.target.closest('.icon-btn')) return;
       selectItem('video', c.id); seekTo(clipDisplayStart(c));
+    });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('video', c.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('video', c.id)},
+        {label:'Nach vorne verschieben', action:()=>moveClip(c.id,-1)},
+        {label:'Nach hinten verschieben', action:()=>moveClip(c.id,1)},
+        {label:'Duplizieren', action:()=>{ selectItem('video', c.id); duplicateSelectedVideoClip(); }},
+        {label:'Entfernen', action:()=>removeClip(c.id)},
+      ]);
     });
     item.querySelector('.mv-up').addEventListener('click', ()=>moveClip(c.id,-1));
     item.querySelector('.mv-down').addEventListener('click', ()=>moveClip(c.id,1));
@@ -1635,7 +1733,14 @@ function renderAudioList(){
       const input = document.createElement('input');
       input.type='file'; input.accept='audio/*'; input.hidden=true;
       input.addEventListener('change', ()=>{ if(input.files[0]) relinkAudioClip(a.id, input.files[0]); });
-      lbl.appendChild(input); row.appendChild(lbl); list.appendChild(row);
+      lbl.appendChild(input); row.appendChild(lbl);
+      row.addEventListener('contextmenu', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, [
+          {label:'Ton entfernen', action:()=>removeAudioClip(a.id)}
+        ]);
+      });
+      list.appendChild(row);
       return;
     }
     const item = document.createElement('div');
@@ -1645,6 +1750,14 @@ function renderAudioList(){
       <div class="media-info"><div class="media-name">${escapeHtml(a.name)}</div><div class="media-dur">${fmtTime(a.trimOut-a.trimIn)} · ab ${fmtTime(a.startTime)}</div></div>
       <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
     item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('audio', a.id); });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('audio', a.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('audio', a.id)},
+        {label:'Entfernen', action:()=>removeAudioClip(a.id)},
+      ]);
+    });
     item.querySelector('.del').addEventListener('click', ()=>removeAudioClip(a.id));
     list.appendChild(item);
   });
@@ -1661,6 +1774,14 @@ function renderOverlayList(){
     item.innerHTML = `${thumb}<div class="media-info"><div class="media-name">${escapeHtml(label)}</div><div class="media-dur">${fmtTime(o.start)}–${fmtTime(o.end)}</div></div>
       <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
     item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('overlay', o.id); });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('overlay', o.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('overlay', o.id)},
+        {label:'Entfernen', action:()=>removeOverlay(o.id)},
+      ]);
+    });
     item.querySelector('.del').addEventListener('click', ()=>removeOverlay(o.id));
     list.appendChild(item);
   });
@@ -1716,6 +1837,15 @@ function renderVideoTrack(){
       if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
       selectItem('video', c.id);
     });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('video', c.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('video', c.id)},
+        {label:'Duplizieren', action:()=>{ selectItem('video', c.id); duplicateSelectedVideoClip(); }},
+        {label:'Entfernen', action:()=>removeClip(c.id)},
+      ]);
+    });
     block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeClip(c.id);});
     block.querySelector('.blk-dup').addEventListener('click', (e)=>{e.stopPropagation(); selectItem('video',c.id); duplicateSelectedVideoClip();});
     setupTrimHandle(block.querySelector('.blk-handle.left'), c, 'in');
@@ -1760,6 +1890,14 @@ function renderAudioTrack(){
       if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
       selectItem('audio', a.id);
     });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('audio', a.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('audio', a.id)},
+        {label:'Entfernen', action:()=>removeAudioClip(a.id)},
+      ]);
+    });
     block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeAudioClip(a.id);});
     setupDragMove(block, a, 'audio');
     setupAudioTrimHandle(block.querySelector('.blk-handle.left'), a, 'in');
@@ -1799,6 +1937,14 @@ function renderOverlayTrack(){
     block.addEventListener('click', (e)=>{
       if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
       selectItem('overlay', o.id);
+    });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('overlay', o.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('overlay', o.id)},
+        {label:'Entfernen', action:()=>removeOverlay(o.id)},
+      ]);
     });
     block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeOverlay(o.id);});
     setupDragMove(block, o, 'overlay');
@@ -1985,7 +2131,6 @@ function startFrameDrag(e, mode){
   selFrame.addEventListener('pointerup', onUp);
 }
 
-/* Fallback: overlay irgendwo im Vorschaubild verschieben (außerhalb des Rahmens) */
 canvas.addEventListener('pointerdown', (e)=>{
   const o = selectedOverlay();
   if(!o) return;
@@ -2594,6 +2739,7 @@ function startExportRecording(){
   document.getElementById('recIndicator').classList.remove('hidden');
   document.getElementById('btnExportVideo').disabled = true;
   seekTo(0);
+  renderFrame(); // Hintergrund sofort auf Schwarz setzen
   mediaRecorder.start(250);
   requestAnimationFrame(()=>togglePlay());
 }
@@ -2612,6 +2758,7 @@ function onRecordingStopped(){
   state.isExporting=false;
   document.getElementById('recIndicator').classList.add('hidden');
   document.getElementById('btnExportVideo').disabled = false;
+  renderFrame(); // Hintergrund wieder hell
   queueAutosave();
 }
 
