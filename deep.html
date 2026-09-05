@@ -37,7 +37,6 @@ html,body{height:100%;}
 body{
   margin:0;background:radial-gradient(circle at 20% -10%, #1c2029 0%, var(--bg-base) 55%);color:var(--text);font-family:var(--font-ui);
   font-size:14px;overflow:hidden;
-  /* Textauswahl global unterbinden, außer in Eingabefeldern */
   -webkit-user-select:none; user-select:none;
 }
 input[type="text"], input[type="search"], textarea, select, [contenteditable]{
@@ -482,7 +481,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </div>
 </div>
 
-<!-- Kontextmenü für Rechtsklick -->
 <div class="context-menu hidden" id="contextMenu"></div>
 
 <script>
@@ -956,6 +954,11 @@ function setCanvasAspect(key){
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 let bufCanvasA=null, bufCanvasB=null;
+
+// Hintergrundfarbe im Editor (helleres Grau) – beim Export schwarz
+const EDITOR_BG = '#2c313d';
+function getBgColor(){ return state.isExporting ? '#000' : EDITOR_BG; }
+
 function getBuf(name){
   let c = name==='A'?bufCanvasA:bufCanvasB;
   if(!c || c.width!==canvas.width || c.height!==canvas.height){
@@ -965,7 +968,8 @@ function getBuf(name){
   const bctx = c.getContext('2d');
   bctx.setTransform(1,0,0,1,0,0);
   bctx.clearRect(0,0,c.width,c.height);
-  bctx.fillStyle='#000'; bctx.fillRect(0,0,c.width,c.height);
+  bctx.fillStyle = getBgColor();
+  bctx.fillRect(0,0,c.width,c.height);
   return c;
 }
 function syncClipTimeForRender(clip, localTime){
@@ -981,7 +985,8 @@ function renderFrame(){
   const fullTotal = Math.max(videoTotal, overlaysAudioMaxEnd());
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = getBgColor();
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
   if(fullTotal<=0){
     ctx.fillStyle='#5c6272'; ctx.font='20px "Space Grotesk"'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
@@ -2734,6 +2739,7 @@ function startExportRecording(){
   document.getElementById('recIndicator').classList.remove('hidden');
   document.getElementById('btnExportVideo').disabled = true;
   seekTo(0);
+  renderFrame(); // Hintergrund sofort auf Schwarz setzen
   mediaRecorder.start(250);
   requestAnimationFrame(()=>togglePlay());
 }
@@ -2752,6 +2758,7 @@ function onRecordingStopped(){
   state.isExporting=false;
   document.getElementById('recIndicator').classList.add('hidden');
   document.getElementById('btnExportVideo').disabled = false;
+  renderFrame(); // Hintergrund wieder hell
   queueAutosave();
 }
 
