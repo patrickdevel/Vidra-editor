@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Anton&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* ====== (Stile unverändert, aber ich füge ein paar Touch-Verbesserungen hinzu) ====== */
 :root{
   --bg-base:#0c0d11;
   --bg-panel:#141620;
@@ -131,7 +130,7 @@ input,select{font-family:var(--font-ui);}
 .btn:disabled:hover{background:var(--bg-elevated);}
 .file-btn{display:inline-flex;align-items:center;}
 
-/* NEU: Keyframe-Button in der Topbar (kurz) */
+/* NEU: Keyframe-Button in der Topbar */
 .kf-top-btn {
   background:var(--bg-elevated);
   border:1px solid var(--accent-dim);
@@ -527,7 +526,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <input id="projectName" class="project-name-input" value="Unbenanntes Projekt" spellcheck="false">
     <div class="save-status" id="saveStatus"><span class="dot"></span><span id="saveStatusText">noch nicht gespeichert</span></div>
     <div class="top-actions">
-      <!-- NEU: Keyframe-Button direkt in der Topbar -->
       <button class="kf-top-btn" id="topKfBtn">◆ Keyframe</button>
       <button class="btn" id="btnReport">📊 Bericht</button>
       <button class="btn" id="btnExportProject">💾 Projekt sichern</button>
@@ -721,9 +719,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 (function(){
 "use strict";
 
-// ===================================================================
+// ================================================================
 // 1. KONSTANTEN & HILFSFUNKTIONEN
-// ===================================================================
+// ================================================================
 const EFFECT_PROPS = [
   {key:'brightness', label:'Helligkeit',    min:0,   max:200, step:1,   unit:'%',  def:100},
   {key:'contrast',   label:'Kontrast',      min:0,   max:200, step:1,   unit:'%',  def:100},
@@ -850,9 +848,9 @@ function roundRectPath(c, x, y, w, h, r){
   c.closePath();
 }
 
-// ===================================================================
-// 2. ZUSTAND & UNDO/HISTORIE
-// ===================================================================
+// ================================================================
+// 2. ZUSTAND & UNDO
+// ================================================================
 let state = {
   projectName:'Unbenanntes Projekt',
   createdAt: Date.now(),
@@ -870,10 +868,11 @@ let state = {
   exportCancelled:false,
 };
 
-// --- Undo/Redo ---
+// Undo/Redo
 let undoStack = [];
 let redoStack = [];
 let isUndoRedo = false;
+let renderDirty = true;
 
 function saveSnapshot() {
   if (isUndoRedo) return;
@@ -892,7 +891,6 @@ function restoreSnapshot(snap) {
   isUndoRedo = true;
   try {
     const data = JSON.parse(snap);
-    // Zustand wiederherstellen, aber keine DOM-Referenzen (die werden beim Rendern neu erstellt)
     state.clips = data.clips || [];
     state.audioClips = data.audioClips || [];
     state.overlays = data.overlays || [];
@@ -901,9 +899,7 @@ function restoreSnapshot(snap) {
     state.projectName = data.projectName || 'Unbenanntes Projekt';
     state.canvasAspect = data.canvasAspect || '16:9';
     state.exportHistory = data.exportHistory || [];
-    // Canvas-Format setzen
     setCanvasAspect(state.canvasAspect);
-    // Alle Video-Elemente neu aufbauen (weil wir keine Referenzen speichern)
     rebuildVideoElements();
     rebuildAudioElements();
     renderAll();
@@ -940,7 +936,6 @@ function updateUndoButtons() {
   document.getElementById('btnRedo').disabled = (redoStack.length === 0);
 }
 
-// Hilfsfunktionen zum Wiederaufbau der Medien-Elemente nach Undo
 function rebuildVideoElements() {
   state.clips.forEach(c => {
     if (c.needsRelink) return;
@@ -953,7 +948,6 @@ function rebuildVideoElements() {
       v.crossOrigin = 'anonymous';
       document.getElementById('hiddenVideos').appendChild(v);
       c.videoEl = v;
-      // Thumb generieren (wenn geladen)
       v.addEventListener('loadedmetadata', ()=>{
         if (!c.duration) c.duration = v.duration;
         generateThumb(c);
@@ -977,9 +971,9 @@ function rebuildAudioElements() {
   });
 }
 
-// ===================================================================
+// ================================================================
 // 3. CORE-FUNKTIONEN (Video, Audio, Overlay)
-// ===================================================================
+// ================================================================
 function createClipFromFile(file, restoreData){
   const clip = {
     id: (restoreData && restoreData.id) || uid(),
@@ -1043,7 +1037,6 @@ function generateThumb(clip){
 }
 function clipDuration(c){ return Math.max(0,(c.trimOut||0)-(c.trimIn||0)); }
 
-// Layout, Übergänge, Keyframes (unverändert, aber gekürzt)
 function getEffectiveTransitionDur(c, next){
   if(!c || !next) return 0;
   const want = (c.transitionOut && c.transitionOut.type!=='none') ? (c.transitionOut.duration||0) : 0;
@@ -1087,7 +1080,6 @@ function timelineLength(){
   return Math.max(vt, overlaysAudioMaxEnd());
 }
 
-// Effekt-Werte mit Keyframes interpolieren
 function computeEffectValues(clip, localTime){
   if(localTime===undefined) localTime = localTimeForClipAtPlayhead(clip);
   const kfs = clip.keyframes;
@@ -1158,7 +1150,7 @@ function addKeyframeNow(){
     upsertObjectKeyframe(o, t, {}, ()=>computeOverlayEffective(o, t));
   } else return;
   renderAll();
-  showKeyframeFlash(); // NEU: visuelles Feedback
+  showKeyframeFlash();
 }
 function removeKeyframeNow(){
   if(state.selection.type==='video'){
@@ -1232,7 +1224,6 @@ function currentFrameContext(){
   return null;
 }
 
-// Schneiden, Duplizieren
 function splitKeyframesAt(list, splitT){
   const before = (list||[]).filter(k=>k.t<=splitT).map(k=>({t:k.t, v:{...k.v}}));
   const after = (list||[]).filter(k=>k.t>splitT).map(k=>({t:k.t-splitT, v:{...k.v}}));
@@ -1284,7 +1275,6 @@ function duplicateSelectedVideoClip(){
   renderAll(); queueAutosave();
 }
 
-// Canvas-Format
 function setCanvasAspect(key){
   const preset = ASPECT_PRESETS[key] || ASPECT_PRESETS['16:9'];
   canvas.width = preset[0]; canvas.height = preset[1];
@@ -1294,13 +1284,12 @@ function setCanvasAspect(key){
   renderAll(); queueAutosave();
 }
 
-// ===================================================================
-// 4. RENDER-ENGINE (Canvas & DOM)
-// ===================================================================
+// ================================================================
+// 4. RENDER-ENGINE (Canvas)
+// ================================================================
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 let bufCanvasA=null, bufCanvasB=null;
-let renderDirty = true; // NEU: Dirty-Flag
 
 const EDITOR_BG = '#2c313d';
 function getBgColor(){ return state.isExporting ? '#000' : EDITOR_BG; }
@@ -1326,7 +1315,7 @@ function syncClipTimeForRender(clip, localTime){
 }
 
 function renderFrame(){
-  if (!renderDirty && !state.isPlaying && !state.isExporting) return; // NEU: nur neuzeichnen wenn nötig
+  if (!renderDirty && !state.isPlaying && !state.isExporting) return;
   renderDirty = false;
 
   const layout = computeVideoLayout();
@@ -1626,9 +1615,9 @@ function updateTimeDisplays(t,total){
 }
 function updatePlayheadUI(t){ document.getElementById('playheadEl').style.left = (t*PX_PER_SEC)+'px'; }
 
-// ===================================================================
+// ================================================================
 // 5. AUDIO & PLAYBACK
-// ===================================================================
+// ================================================================
 let audioCtx=null, streamDest=null;
 let mediaRecorder=null, recChunks=[], recStartTime=0;
 let scrubbing=false, lastTickTs=null;
@@ -1736,9 +1725,9 @@ function seekTo(t){
   renderDirty = true;
 }
 
-// ===================================================================
-// 6. TICK (Hauptschleife)
-// ===================================================================
+// ================================================================
+// 6. HAUPTSCHLEIFE (TICK)
+// ================================================================
 function tick(){
   const now = performance.now();
   const dt = lastTickTs ? (now-lastTickTs)/1000 : 0;
@@ -1798,9 +1787,9 @@ function tick(){
   requestAnimationFrame(tick);
 }
 
-// ===================================================================
-// 7. UI-EVENT-BINDING (gekürzt, nur neue/geänderte Teile)
-// ===================================================================
+// ================================================================
+// 7. UI-EVENT-BINDING
+// ================================================================
 document.getElementById('btnPlay').addEventListener('click', togglePlay);
 document.getElementById('btnSplit').addEventListener('click', ()=>{
   saveSnapshot();
@@ -1817,21 +1806,15 @@ document.getElementById('volumeRange').addEventListener('input', e=>{
 });
 document.getElementById('aspectSelect').addEventListener('change', e=> setCanvasAspect(e.target.value));
 
-// NEU: Keyframe-Button in der Topbar
 document.getElementById('topKfBtn').addEventListener('click', ()=>{
   saveSnapshot();
   addKeyframeNow();
 });
 
-// NEU: Undo/Redo
-document.getElementById('btnUndo').addEventListener('click', ()=>{
-  undo();
-});
-document.getElementById('btnRedo').addEventListener('click', ()=>{
-  redo();
-});
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRedo').addEventListener('click', redo);
 
-// Tastenkürzel erweitern
+// Tastenkürzel
 window.addEventListener('keydown', e=>{
   if(state.isExporting){
     if(e.key==='Escape'){ e.preventDefault(); document.getElementById('exportCancelBtn').click(); }
@@ -1840,7 +1823,6 @@ window.addEventListener('keydown', e=>{
   const tag = document.activeElement ? document.activeElement.tagName : '';
   if(['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
 
-  // Undo/Redo (Strg+Z / Strg+Y)
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     e.preventDefault();
     if (e.shiftKey) redo(); else undo();
@@ -1890,7 +1872,6 @@ window.addEventListener('keydown', e=>{
   }
 });
 
-// Zoom
 function setZoom(px){
   PX_PER_SEC = clamp(px, 20, 240);
   document.getElementById('zoomLabel').textContent = Math.round(PX_PER_SEC)+'px/s';
@@ -1899,9 +1880,9 @@ function setZoom(px){
 document.getElementById('zoomIn').addEventListener('click', ()=>setZoom(PX_PER_SEC*1.3));
 document.getElementById('zoomOut').addEventListener('click', ()=>setZoom(PX_PER_SEC/1.3));
 
-// ===================================================================
-// 8. MEDIEN-FUNKTIONEN (Video, Audio, Overlay) – gekürzt
-// ===================================================================
+// ================================================================
+// 8. MEDIEN-FUNKTIONEN (Video, Audio, Overlay)
+// ================================================================
 function removeClip(id){
   saveSnapshot();
   const idx = state.clips.findIndex(c=>c.id===id);
@@ -1938,7 +1919,6 @@ function selectedClip(){ return state.selection.type==='video' ? state.clips.fin
 function selectedAudio(){ return state.selection.type==='audio' ? state.audioClips.find(a=>a.id===state.selection.id) : null; }
 function selectedOverlay(){ return state.selection.type==='overlay' ? state.overlays.find(o=>o.id===state.selection.id) : null; }
 
-// Audio-Funktionen (ähnlich, mit saveSnapshot)
 function removeAudioClip(id){
   saveSnapshot();
   const idx = state.audioClips.findIndex(a=>a.id===id);
@@ -1966,7 +1946,6 @@ function relinkAudioClip(id, file){
   renderAll(); queueAutosave();
 }
 
-// Overlays
 function makeOverlayDefaults(kind){
   return {
     id:uid(), kind, start:0, end:3, x:50, y:50, scale:100, rotation:0,
@@ -1995,16 +1974,9 @@ function removeOverlay(id){
   renderAll(); queueAutosave();
 }
 
-// ===================================================================
-// 9. UI-RENDER-FUNKTIONEN (Media-Listen, Timeline, Inspector)
-// ===================================================================
-// ... (die Funktionen renderMediaList, renderAudioList, renderOverlayList,
-// renderTimeline, renderVideoTrack, renderAudioTrack, renderOverlayTrack,
-// renderEffectsTab, renderTransitionTab, renderKeyframesTab, renderOverlayTab,
-// renderAudioTab, renderKfBar sind weitgehend unverändert, aber ich zeige
-// hier die wichtigen Änderungen in renderKfBar und der Keyframe-Flash-Funktion)
-
-// NEU: Visuelles Feedback für Keyframe
+// ================================================================
+// 9. UI-RENDER-FUNKTIONEN (Listen, Timeline, Inspector, Keyframe-Bar)
+// ================================================================
 function showKeyframeFlash() {
   const flash = document.createElement('div');
   flash.style.cssText = `
@@ -2022,6 +1994,790 @@ function showKeyframeFlash() {
     flash.style.opacity = '0';
     setTimeout(() => flash.remove(), 500);
   });
+}
+
+function renderMediaList(){
+  const list = document.getElementById('mediaList');
+  list.innerHTML='';
+  if(state.clips.length===0){
+    list.innerHTML = '<div class="empty-hint">Noch keine Videos. Füge eine Datei hinzu, um deinen ersten Clip auf die Timeline zu legen.</div>';
+    return;
+  }
+  state.clips.forEach(c=>{
+    if(c.needsRelink){
+      const row = document.createElement('div');
+      row.className='relink-row';
+      row.innerHTML = `<div class="rl-name">${escapeHtml(c.name)} ${c.fileSizeHint?('· '+fmtBytes(c.fileSizeHint)):''}</div>`;
+      const lbl = document.createElement('label');
+      lbl.className='btn file-btn'; lbl.textContent='Datei erneut auswählen';
+      const input = document.createElement('input');
+      input.type='file'; input.accept='video/*'; input.hidden=true;
+      input.addEventListener('change', ()=>{ if(input.files[0]) relinkClip(c.id, input.files[0]); });
+      lbl.appendChild(input); row.appendChild(lbl);
+      row.addEventListener('contextmenu', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, [
+          {label:'Clip entfernen', action:()=>removeClip(c.id)}
+        ]);
+      });
+      list.appendChild(row);
+      return;
+    }
+    const item = document.createElement('div');
+    item.className='media-item'+(state.selection.type==='video'&&c.id===state.selection.id?' selected':'');
+    item.innerHTML = `
+      ${c.thumb? `<img class="media-thumb" src="${c.thumb}">` : `<div class="media-thumb missing">▶</div>`}
+      <div class="media-info"><div class="media-name">${escapeHtml(c.name)}</div><div class="media-dur">${fmtTime(clipDuration(c))}</div></div>
+      <div class="media-actions">
+        <button class="icon-btn mv-up" title="Nach vorne">↑</button>
+        <button class="icon-btn mv-down" title="Nach hinten">↓</button>
+        <button class="icon-btn del" title="Entfernen">✕</button>
+      </div>`;
+    item.addEventListener('click', (e)=>{
+      if(e.target.closest('.icon-btn')) return;
+      selectItem('video', c.id); seekTo(clipDisplayStart(c));
+    });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('video', c.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('video', c.id)},
+        {label:'Nach vorne verschieben', action:()=>moveClip(c.id,-1)},
+        {label:'Nach hinten verschieben', action:()=>moveClip(c.id,1)},
+        {label:'Duplizieren', action:()=>{ selectItem('video', c.id); duplicateSelectedVideoClip(); }},
+        {label:'Entfernen', action:()=>removeClip(c.id)},
+      ]);
+    });
+    item.querySelector('.mv-up').addEventListener('click', ()=>moveClip(c.id,-1));
+    item.querySelector('.mv-down').addEventListener('click', ()=>moveClip(c.id,1));
+    item.querySelector('.del').addEventListener('click', ()=>removeClip(c.id));
+    list.appendChild(item);
+  });
+}
+
+function renderAudioList(){
+  const list = document.getElementById('audioList');
+  list.innerHTML='';
+  if(state.audioClips.length===0){ list.innerHTML='<div class="empty-hint">Noch kein Ton oder Musik hinzugefügt.</div>'; return; }
+  state.audioClips.forEach(a=>{
+    if(a.needsRelink){
+      const row = document.createElement('div');
+      row.className='relink-row';
+      row.innerHTML = `<div class="rl-name">${escapeHtml(a.name)}</div>`;
+      const lbl = document.createElement('label');
+      lbl.className='btn file-btn'; lbl.textContent='Datei erneut auswählen';
+      const input = document.createElement('input');
+      input.type='file'; input.accept='audio/*'; input.hidden=true;
+      input.addEventListener('change', ()=>{ if(input.files[0]) relinkAudioClip(a.id, input.files[0]); });
+      lbl.appendChild(input); row.appendChild(lbl);
+      row.addEventListener('contextmenu', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, [
+          {label:'Ton entfernen', action:()=>removeAudioClip(a.id)}
+        ]);
+      });
+      list.appendChild(row);
+      return;
+    }
+    const item = document.createElement('div');
+    item.className='media-item audio-type'+(state.selection.type==='audio'&&a.id===state.selection.id?' selected':'');
+    item.innerHTML = `
+      <div class="media-thumb missing">♪</div>
+      <div class="media-info"><div class="media-name">${escapeHtml(a.name)}</div><div class="media-dur">${fmtTime(a.trimOut-a.trimIn)} · ab ${fmtTime(a.startTime)}</div></div>
+      <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
+    item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('audio', a.id); });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('audio', a.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('audio', a.id)},
+        {label:'Entfernen', action:()=>removeAudioClip(a.id)},
+      ]);
+    });
+    item.querySelector('.del').addEventListener('click', ()=>removeAudioClip(a.id));
+    list.appendChild(item);
+  });
+}
+
+function renderOverlayList(){
+  const list = document.getElementById('overlayList');
+  list.innerHTML='';
+  if(state.overlays.length===0){ list.innerHTML='<div class="empty-hint">Noch keine Text- oder Sticker-Overlays.</div>'; return; }
+  state.overlays.forEach(o=>{
+    const item = document.createElement('div');
+    item.className='media-item overlay-type'+(state.selection.type==='overlay'&&o.id===state.selection.id?' selected':'');
+    const thumb = o.kind==='image' ? `<img class="media-thumb" src="${o.content||''}">` : `<div class="media-thumb emoji">${o.kind==='sticker'?o.content:'T'}</div>`;
+    const label = o.kind==='text' ? (o.content||'Text') : (o.kind==='sticker'? 'Sticker' : 'Bild');
+    item.innerHTML = `${thumb}<div class="media-info"><div class="media-name">${escapeHtml(label)}</div><div class="media-dur">${fmtTime(o.start)}–${fmtTime(o.end)}</div></div>
+      <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
+    item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('overlay', o.id); });
+    item.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('overlay', o.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('overlay', o.id)},
+        {label:'Entfernen', action:()=>removeOverlay(o.id)},
+      ]);
+    });
+    item.querySelector('.del').addEventListener('click', ()=>removeOverlay(o.id));
+    list.appendChild(item);
+  });
+}
+
+function renderTimeline(){
+  const fullTotal = timelineLength();
+  const width = Math.max(fullTotal*PX_PER_SEC, 300);
+  document.getElementById('timelineInner').style.width = width+'px';
+
+  const ruler = document.getElementById('timelineRuler');
+  ruler.innerHTML='';
+  const step = PX_PER_SEC<40 ? 10 : (PX_PER_SEC<100 ? 5 : 1);
+  for(let s=0; s<=Math.ceil(fullTotal)+5; s+=step){
+    const tick = document.createElement('div');
+    tick.className='ruler-tick'; tick.style.left=(s*PX_PER_SEC)+'px'; tick.textContent=fmtClock(s);
+    ruler.appendChild(tick);
+  }
+  renderVideoTrack();
+  renderAudioTrack();
+  renderOverlayTrack();
+}
+
+function renderVideoTrack(){
+  const track = document.getElementById('videoTrack');
+  track.querySelectorAll('.blk,.trans-badge').forEach(n=>n.remove());
+  document.getElementById('videoEmptyMsg').classList.toggle('hidden', state.clips.length>0);
+  const layout = computeVideoLayout();
+
+  layout.forEach((entry,i)=>{
+    const c = entry.clip;
+    const left = entry.start*PX_PER_SEC;
+    const w = Math.max(clipDuration(c)*PX_PER_SEC, 10);
+    const block = document.createElement('div');
+    block.className='blk video-blk'+(state.selection.type==='video'&&c.id===state.selection.id?' selected':'')+(c.needsRelink?' missing':'');
+    block.style.left=left+'px'; block.style.width=w+'px';
+    block.innerHTML = `
+      <div class="blk-body"><div class="blk-title">${escapeHtml(c.name)}</div><div class="blk-dur">${fmtTime(clipDuration(c))}</div></div>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
+      <button class="blk-top-btn blk-dup" title="Duplizieren">⧉</button>
+      <div class="blk-kf-row"></div>
+      <div class="blk-handle left"></div>
+      <div class="blk-handle right"></div>`;
+    const kfRow = block.querySelector('.blk-kf-row');
+    c.keyframes.forEach(k=>{
+      const dot=document.createElement('div'); dot.className='kf-dot';
+      dot.style.left=((k.t/Math.max(clipDuration(c),0.001))*100)+'%';
+      dot.title='Keyframe @ '+k.t.toFixed(1)+'s';
+      kfRow.appendChild(dot);
+    });
+    block.addEventListener('click', (e)=>{
+      if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
+      selectItem('video', c.id);
+    });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('video', c.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('video', c.id)},
+        {label:'Duplizieren', action:()=>{ selectItem('video', c.id); duplicateSelectedVideoClip(); }},
+        {label:'Entfernen', action:()=>removeClip(c.id)},
+      ]);
+    });
+    block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeClip(c.id);});
+    block.querySelector('.blk-dup').addEventListener('click', (e)=>{e.stopPropagation(); selectItem('video',c.id); duplicateSelectedVideoClip();});
+    setupTrimHandle(block.querySelector('.blk-handle.left'), c, 'in');
+    setupTrimHandle(block.querySelector('.blk-handle.right'), c, 'out');
+    track.appendChild(block);
+
+    const next = layout[i+1];
+    if(next){
+      const tDur = getEffectiveTransitionDur(c, next.clip);
+      if(tDur>0){
+        const badge = document.createElement('div');
+        badge.className='trans-badge';
+        badge.style.left=(next.start*PX_PER_SEC)+'px';
+        badge.style.width=Math.max((entry.end-next.start)*PX_PER_SEC,6)+'px';
+        badge.textContent='⤨';
+        track.appendChild(badge);
+      }
+    }
+  });
+}
+
+function renderAudioTrack(){
+  const track = document.getElementById('audioTrack');
+  track.querySelectorAll('.blk').forEach(n=>n.remove());
+  track.querySelectorAll('.track-empty-msg').forEach(n=>n.remove());
+  if(state.audioClips.length===0){
+    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Ton hinzugefügt';
+    track.appendChild(msg);
+  }
+  state.audioClips.forEach(a=>{
+    const left = a.startTime*PX_PER_SEC;
+    const w = Math.max((a.trimOut-a.trimIn)*PX_PER_SEC, 10);
+    const block = document.createElement('div');
+    block.className='blk audio-blk'+(state.selection.type==='audio'&&a.id===state.selection.id?' selected':'');
+    block.style.left=left+'px'; block.style.width=w+'px';
+    block.innerHTML = `
+      <div class="blk-body"><div class="blk-title">♪ ${escapeHtml(a.name)}</div><div class="blk-dur">${fmtTime(a.trimOut-a.trimIn)}</div></div>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
+      <div class="blk-handle left"></div>
+      <div class="blk-handle right"></div>`;
+    block.addEventListener('click', (e)=>{
+      if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
+      selectItem('audio', a.id);
+    });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('audio', a.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('audio', a.id)},
+        {label:'Entfernen', action:()=>removeAudioClip(a.id)},
+      ]);
+    });
+    block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeAudioClip(a.id);});
+    setupDragMove(block, a, 'audio');
+    setupAudioTrimHandle(block.querySelector('.blk-handle.left'), a, 'in');
+    setupAudioTrimHandle(block.querySelector('.blk-handle.right'), a, 'out');
+    track.appendChild(block);
+  });
+}
+
+function renderOverlayTrack(){
+  const track = document.getElementById('overlayTrack');
+  track.querySelectorAll('.blk').forEach(n=>n.remove());
+  track.querySelectorAll('.track-empty-msg').forEach(n=>n.remove());
+  if(state.overlays.length===0){
+    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Overlay hinzugefügt';
+    track.appendChild(msg);
+  }
+  state.overlays.forEach(o=>{
+    const left = o.start*PX_PER_SEC;
+    const w = Math.max((o.end-o.start)*PX_PER_SEC, 10);
+    const label = o.kind==='text' ? (o.content||'Text') : (o.kind==='sticker'? o.content+' Sticker' : 'Bild/GIF');
+    const block = document.createElement('div');
+    block.className='blk overlay-blk'+(state.selection.type==='overlay'&&o.id===state.selection.id?' selected':'');
+    block.style.left=left+'px'; block.style.width=w+'px';
+    block.innerHTML = `
+      <div class="blk-body"><div class="blk-title">${escapeHtml(label)}</div><div class="blk-dur">${fmtTime(o.end-o.start)}</div></div>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
+      <div class="blk-kf-row"></div>
+      <div class="blk-handle left"></div>
+      <div class="blk-handle right"></div>`;
+    const kfRow = block.querySelector('.blk-kf-row');
+    (o.keyframes||[]).forEach(k=>{
+      const dot=document.createElement('div'); dot.className='kf-dot';
+      dot.style.left=((k.t/Math.max(o.end-o.start,0.001))*100)+'%';
+      dot.title='Keyframe @ '+k.t.toFixed(1)+'s';
+      kfRow.appendChild(dot);
+    });
+    block.addEventListener('click', (e)=>{
+      if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
+      selectItem('overlay', o.id);
+    });
+    block.addEventListener('contextmenu', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      selectItem('overlay', o.id);
+      showContextMenu(e.clientX, e.clientY, [
+        {label:'Auswählen', action:()=>selectItem('overlay', o.id)},
+        {label:'Entfernen', action:()=>removeOverlay(o.id)},
+      ]);
+    });
+    block.querySelector('.blk-del').addEventListener('click', (e)=>{e.stopPropagation(); removeOverlay(o.id);});
+    setupDragMove(block, o, 'overlay');
+    setupOverlayEdgeHandle(block.querySelector('.blk-handle.left'), o, 'start');
+    setupOverlayEdgeHandle(block.querySelector('.blk-handle.right'), o, 'end');
+    track.appendChild(block);
+  });
+}
+
+function setupTrimHandle(handleEl, clip, side){
+  handleEl.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation(); e.preventDefault();
+    handleEl.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startIn = clip.trimIn, startOut = clip.trimOut;
+    function onMove(ev){
+      const dx = (ev.clientX-startX)/PX_PER_SEC;
+      if(side==='in') clip.trimIn = clamp(startIn+dx, 0, clip.trimOut-0.2);
+      else clip.trimOut = clamp(startOut+dx, clip.trimIn+0.2, clip.duration);
+      renderTimeline(); renderFrame();
+    }
+    function onUp(){
+      handleEl.releasePointerCapture(e.pointerId);
+      handleEl.removeEventListener('pointermove', onMove);
+      handleEl.removeEventListener('pointerup', onUp);
+      queueAutosave();
+    }
+    handleEl.addEventListener('pointermove', onMove);
+    handleEl.addEventListener('pointerup', onUp);
+  });
+}
+function setupAudioTrimHandle(handleEl, a, side){
+  handleEl.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation(); e.preventDefault();
+    handleEl.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startIn = a.trimIn, startOut = a.trimOut;
+    function onMove(ev){
+      const dx = (ev.clientX-startX)/PX_PER_SEC;
+      if(side==='in') a.trimIn = clamp(startIn+dx, 0, a.trimOut-0.2);
+      else a.trimOut = clamp(startOut+dx, a.trimIn+0.2, a.duration);
+      renderTimeline(); renderFrame();
+    }
+    function onUp(){
+      handleEl.releasePointerCapture(e.pointerId);
+      handleEl.removeEventListener('pointermove', onMove);
+      handleEl.removeEventListener('pointerup', onUp);
+      queueAutosave();
+    }
+    handleEl.addEventListener('pointermove', onMove);
+    handleEl.addEventListener('pointerup', onUp);
+  });
+}
+function setupOverlayEdgeHandle(handleEl, o, side){
+  handleEl.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation(); e.preventDefault();
+    handleEl.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startS = o.start, startE = o.end;
+    function onMove(ev){
+      const dx = (ev.clientX-startX)/PX_PER_SEC;
+      if(side==='start') o.start = clamp(startS+dx, 0, o.end-0.3);
+      else o.end = clamp(startE+dx, o.start+0.3, startE+100000);
+      renderTimeline(); renderFrame();
+    }
+    function onUp(){
+      handleEl.releasePointerCapture(e.pointerId);
+      handleEl.removeEventListener('pointermove', onMove);
+      handleEl.removeEventListener('pointerup', onUp);
+      queueAutosave();
+    }
+    handleEl.addEventListener('pointermove', onMove);
+    handleEl.addEventListener('pointerup', onUp);
+  });
+}
+function setupDragMove(blockEl, item, kind){
+  blockEl.addEventListener('pointerdown', (e)=>{
+    if(e.target.closest('.blk-handle')||e.target.closest('.blk-top-btn')) return;
+    e.stopPropagation();
+    blockEl.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    let moved=false;
+    const startVals = kind==='audio' ? {startTime:item.startTime} : {start:item.start, end:item.end};
+    function onMove(ev){
+      const dx = (ev.clientX-startX);
+      if(Math.abs(dx)>3) moved=true;
+      const dSec = dx/PX_PER_SEC;
+      if(kind==='audio'){ item.startTime = clamp(startVals.startTime+dSec, 0, 100000); }
+      else{
+        const dur = startVals.end-startVals.start;
+        const ns = clamp(startVals.start+dSec, 0, 100000);
+        item.start = ns; item.end = ns+dur;
+      }
+      renderTimeline(); renderFrame();
+    }
+    function onUp(){
+      blockEl.releasePointerCapture(e.pointerId);
+      blockEl.removeEventListener('pointermove', onMove);
+      blockEl.removeEventListener('pointerup', onUp);
+      if(moved) queueAutosave();
+      else selectItem(kind, item.id);
+    }
+    blockEl.addEventListener('pointermove', onMove);
+    blockEl.addEventListener('pointerup', onUp);
+  });
+}
+
+let draggingPlayhead=false;
+function timelinePointerToTime(clientX){
+  const wrap = document.getElementById('timelineScroll');
+  const rect = wrap.getBoundingClientRect();
+  const x = clientX-rect.left+wrap.scrollLeft;
+  return clamp(x/PX_PER_SEC, 0, timelineLength());
+}
+document.getElementById('timelineScroll').addEventListener('pointerdown', (e)=>{
+  if(e.target.closest('.blk')) return;
+  draggingPlayhead=true;
+  seekTo(timelinePointerToTime(e.clientX));
+  renderFrame();
+});
+window.addEventListener('pointermove', (e)=>{ if(draggingPlayhead){ seekTo(timelinePointerToTime(e.clientX)); renderFrame(); } });
+window.addEventListener('pointerup', ()=>{ draggingPlayhead=false; });
+
+// ================================================================
+// 10. AUSWAHL-RAHMEN (Verschieben, Größe, Drehung)
+// ================================================================
+const selFrame = document.getElementById('selFrame');
+selFrame.addEventListener('pointerdown', (e)=>{
+  if(e.target.closest('.sf-handle')||e.target.closest('.sf-rotate')) return;
+  e.stopPropagation();
+  startFrameDrag(e,'move');
+});
+selFrame.querySelectorAll('.sf-handle').forEach(h=>{
+  h.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); startFrameDrag(e,'resize'); });
+});
+document.getElementById('sfRotate').addEventListener('pointerdown', (e)=>{ e.stopPropagation(); startFrameDrag(e,'rotate'); });
+
+function startFrameDrag(e, mode){
+  const info = currentFrameContext();
+  if(!info) return;
+  const {kind, target, vals, box} = info;
+  const {scale} = getCanvasDisplayRect();
+  const startClientX=e.clientX, startClientY=e.clientY;
+  const startVals = {...vals};
+  const cx=box.cx, cy=box.cy;
+  const startDist = Math.hypot(box.width/2, box.height/2) || 1;
+  try{ selFrame.setPointerCapture(e.pointerId); }catch(err){}
+  function onMove(ev){
+    const dxPx = (ev.clientX-startClientX)/scale, dyPx=(ev.clientY-startClientY)/scale;
+    if(mode==='move'){
+      const W=canvas.width,H=canvas.height;
+      if(kind==='video'){
+        let nx = startVals.posX + (dxPx/W)*100, ny = startVals.posY + (dyPx/H)*100;
+        if(Math.abs(nx)<1.5) nx=0; if(Math.abs(ny)<1.5) ny=0;
+        setVideoProps(target, {posX:clamp(nx,-50,50), posY:clamp(ny,-50,50)});
+      } else {
+        let nx = startVals.x + (dxPx/W)*100, ny = startVals.y + (dyPx/H)*100;
+        if(Math.abs(nx-50)<1.5) nx=50; if(Math.abs(ny-50)<1.5) ny=50;
+        setOverlayProps(target, {x:clamp(nx,0,100), y:clamp(ny,0,100)});
+      }
+    } else if(mode==='resize'){
+      const curPx = canvasPxFromClient(ev.clientX, ev.clientY);
+      const dist = Math.hypot(curPx.x-cx, curPx.y-cy) || 1;
+      const ratio = dist/startDist;
+      if(kind==='video') setVideoProps(target, {scale:clamp(startVals.scale*ratio,20,300)});
+      else setOverlayProps(target, {scale:clamp((startVals.scale||100)*ratio,10,400)});
+    } else if(mode==='rotate'){
+      const curPx = canvasPxFromClient(ev.clientX, ev.clientY);
+      let angle = Math.atan2(curPx.y-cy, curPx.x-cx)*180/Math.PI + 90;
+      angle = Math.round(angle);
+      if(Math.abs(angle)<3) angle=0;
+      if(Math.abs(Math.abs(angle)-180)<3) angle = angle>0?180:-180;
+      setOverlayProps(target, {rotation:angle});
+    }
+    renderKfBar();
+  }
+  function onUp(){
+    try{ selFrame.releasePointerCapture(e.pointerId); }catch(err){}
+    selFrame.removeEventListener('pointermove', onMove);
+    selFrame.removeEventListener('pointerup', onUp);
+    queueAutosave();
+  }
+  selFrame.addEventListener('pointermove', onMove);
+  selFrame.addEventListener('pointerup', onUp);
+}
+
+canvas.addEventListener('pointerdown', (e)=>{
+  const o = selectedOverlay();
+  if(!o) return;
+  if(state.playheadTime<o.start || state.playheadTime>o.end) return;
+  const startVals = computeOverlayEffective(o, localTimeForOverlay(o));
+  draggingOverlayOnCanvas=o;
+  dragStartPX={x:e.clientX,y:e.clientY};
+  dragStartXY={x:startVals.x,y:startVals.y};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e)=>{
+  if(!draggingOverlayOnCanvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const dxPct = ((e.clientX-dragStartPX.x)/rect.width)*100;
+  const dyPct = ((e.clientY-dragStartPX.y)/rect.height)*100;
+  let nx=clamp(dragStartXY.x+dxPct,0,100), ny=clamp(dragStartXY.y+dyPct,0,100);
+  setOverlayProps(draggingOverlayOnCanvas, {x:nx, y:ny});
+});
+canvas.addEventListener('pointerup', ()=>{ draggingOverlayOnCanvas=null; });
+
+// ================================================================
+// 11. INSPECTOR-TABS (gekürzt)
+// ================================================================
+function renderEffectsTab(){
+  const el = document.getElementById('tabEffects');
+  const clip = selectedClip();
+  if(!clip){ el.innerHTML='<div class="no-selection">Wähle einen Video-Clip in der Timeline aus, um Effekte zu bearbeiten.</div>'; return; }
+  if(clip.needsRelink){ el.innerHTML='<div class="no-selection">Dieser Clip benötigt eine neu verknüpfte Videodatei.</div>'; return; }
+  el.innerHTML='';
+
+  const secQuick = document.createElement('div');
+  secQuick.className='section-title'; secQuick.textContent='Schnellaktionen';
+  el.appendChild(secQuick);
+  const quickRow = document.createElement('div');
+  quickRow.className='quick-row';
+  quickRow.innerHTML = `
+    <button class="btn" id="qFadeIn">Einblenden (1s)</button>
+    <button class="btn" id="qFadeOut">Ausblenden (1s)</button>
+    <button class="btn" id="qFlip">${clip.flipH?'✓ Gespiegelt':'Spiegeln'}</button>`;
+  el.appendChild(quickRow);
+  quickRow.querySelector('#qFadeIn').addEventListener('click', ()=>{
+    const d=clipDuration(clip);
+    upsertObjectKeyframe(clip,0,{opacity:0},()=>computeEffectValues(clip,0));
+    upsertObjectKeyframe(clip,Math.min(1,d),{opacity:100},()=>computeEffectValues(clip,Math.min(1,d)));
+    renderAll();
+  });
+  quickRow.querySelector('#qFadeOut').addEventListener('click', ()=>{
+    const d=clipDuration(clip);
+    upsertObjectKeyframe(clip,Math.max(0,d-1),{opacity:100},()=>computeEffectValues(clip,Math.max(0,d-1)));
+    upsertObjectKeyframe(clip,d,{opacity:0},()=>computeEffectValues(clip,d));
+    renderAll();
+  });
+  quickRow.querySelector('#qFlip').addEventListener('click', ()=>{ clip.flipH=!clip.flipH; renderAll(); queueAutosave(); });
+
+  const secPreset = document.createElement('div');
+  secPreset.className='section-title'; secPreset.textContent='Filter-Presets';
+  el.appendChild(secPreset);
+  const presetRow = document.createElement('div');
+  presetRow.className='quick-row';
+  Object.keys(FILTER_PRESETS).forEach(name=>{
+    const b=document.createElement('button'); b.className='btn'; b.textContent=name;
+    b.addEventListener('click', ()=>{
+      const patch = name==='Zurücksetzen' ? defaultEffects() : {...defaultEffects(), ...FILTER_PRESETS[name]};
+      setVideoProps(clip, patch);
+      renderAll();
+    });
+    presetRow.appendChild(b);
+  });
+  el.appendChild(presetRow);
+
+  const secTitle = document.createElement('div');
+  secTitle.className='section-title'; secTitle.textContent='Bild, Farbe & Größe'; el.appendChild(secTitle);
+
+  const localT = localTimeForClipAtPlayhead(clip);
+  const vals = computeEffectValues(clip, localT);
+  EFFECT_PROPS.forEach(p=>{
+    const row = document.createElement('div');
+    row.className='eff-row';
+    row.innerHTML = `
+      <div class="eff-head"><span class="eff-label">${p.label}</span><span class="eff-value">${Number(vals[p.key]).toFixed(p.step<1?1:0)}${p.unit}</span></div>
+      <div class="eff-controls"><input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${vals[p.key]}"></div>`;
+    const range = row.querySelector('input[type=range]');
+    const valSpan = row.querySelector('.eff-value');
+    range.addEventListener('input', ()=>{
+      const v = Number(range.value);
+      valSpan.textContent = v.toFixed(p.step<1?1:0)+p.unit;
+      setVideoProps(clip, {[p.key]:v});
+      renderFrame(); renderKfBar();
+    });
+    range.addEventListener('change', ()=>queueAutosave());
+    el.appendChild(row);
+  });
+}
+
+function renderTransitionTab(){
+  const el = document.getElementById('tabTransition');
+  const clip = selectedClip();
+  if(!clip){ el.innerHTML='<div class="no-selection">Wähle einen Video-Clip aus, um einen Übergang zum nächsten Clip festzulegen.</div>'; return; }
+  const idx = state.clips.indexOf(clip);
+  if(idx<0 || idx>=state.clips.length-1){ el.innerHTML='<div class="no-selection">Dies ist der letzte Clip in der Timeline – es gibt keinen nachfolgenden Clip für einen Übergang.</div>'; return; }
+  if(!clip.transitionOut) clip.transitionOut={type:'none',duration:0.6};
+  el.innerHTML = `
+    <div class="section-title">Übergang zum nächsten Clip</div>
+    <div class="text-field"><label>Typ</label>
+      <select id="transType" class="sel-input">
+        ${TRANSITION_TYPES.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="eff-row"><div class="eff-head"><span class="eff-label">Dauer</span><span class="eff-value" id="transDurVal">${clip.transitionOut.duration.toFixed(1)}s</span></div>
+      <input type="range" id="transDur" min="0.2" max="3" step="0.1" value="${clip.transitionOut.duration}"></div>
+    <div class="kf-clear-hint" style="font-size:10px;color:var(--text-faint);line-height:1.5;">Die Dauer wird automatisch an die Länge beider beteiligten Clips angepasst, falls sie zu kurz sind. In der Timeline erscheint ein schraffiertes Übergangs-Feld zwischen den Clips.</div>`;
+  const sel = el.querySelector('#transType');
+  sel.value = clip.transitionOut.type;
+  sel.addEventListener('change', ()=>{ clip.transitionOut.type=sel.value; renderAll(); queueAutosave(); });
+  const dur = el.querySelector('#transDur');
+  dur.addEventListener('input', ()=>{
+    clip.transitionOut.duration = Number(dur.value);
+    el.querySelector('#transDurVal').textContent = Number(dur.value).toFixed(1)+'s';
+    renderTimeline(); renderFrame();
+  });
+  dur.addEventListener('change', ()=>queueAutosave());
+}
+
+function renderKeyframesTab(){
+  const el = document.getElementById('tabKeyframes');
+  let target=null, kind=null;
+  if(state.selection.type==='video'){ const c=selectedClip(); if(c && !c.needsRelink){ target=c; kind='video'; } }
+  else if(state.selection.type==='overlay'){ target=selectedOverlay(); kind='overlay'; }
+  if(!target){ el.innerHTML='<div class="no-selection">Wähle ein Video oder Overlay aus. Nutze anschließend die Keyframe-Leiste unter der Vorschau, um Größe, Position und Effekte zu animieren.</div>'; return; }
+  const kfs = target.keyframes||[];
+  if(kfs.length===0){ el.innerHTML='<div class="no-selection">Noch keine Keyframes. Passe Größe, Position, Drehung oder Effekte an und drücke „◆ Keyframe“ in der Leiste unter der Vorschau.</div>'; return; }
+  el.innerHTML='<div class="section-title">Gesetzte Keyframes</div>';
+  const group = document.createElement('div'); group.className='kf-group';
+  const startAbs = kind==='video' ? clipDisplayStart(target) : target.start;
+  kfs.forEach((k,idx)=>{
+    const item = document.createElement('div'); item.className='kf-item';
+    const parts=[];
+    if(kind==='video'){
+      if(k.v.scale!==undefined) parts.push('Zoom '+Math.round(k.v.scale)+'%');
+      if(k.v.opacity!==undefined) parts.push('Deckkr. '+Math.round(k.v.opacity)+'%');
+      if(k.v.brightness!==undefined) parts.push('Hell. '+Math.round(k.v.brightness)+'%');
+    } else {
+      if(k.v.scale!==undefined) parts.push('Größe '+Math.round(k.v.scale)+'%');
+      if(k.v.rotation!==undefined) parts.push('Drehung '+Math.round(k.v.rotation)+'°');
+      if(k.v.x!==undefined) parts.push('Pos '+Math.round(k.v.x)+'/'+Math.round(k.v.y)+'%');
+    }
+    item.innerHTML = `<span class="t">${k.t.toFixed(1)}s</span><span class="v">${parts.join(' · ')||'Keyframe'}</span><button title="Löschen">✕</button>`;
+    item.addEventListener('click', (e)=>{ if(e.target.tagName==='BUTTON') return; seekTo(startAbs+k.t); renderAll(); });
+    item.querySelector('button').addEventListener('click', (e)=>{ e.stopPropagation(); kfs.splice(idx,1); queueAutosave(); renderAll(); });
+    group.appendChild(item);
+  });
+  el.appendChild(group);
+  const clearBtn = document.createElement('button');
+  clearBtn.className='btn danger-outline del-full-btn'; clearBtn.textContent='Alle Keyframes löschen';
+  clearBtn.addEventListener('click', ()=>{ if(kind==='video') clearAllKeyframesVideo(target); else clearAllKeyframesOverlay(target); renderAll(); });
+  el.appendChild(clearBtn);
+}
+
+function renderOverlayTab(){
+  const el = document.getElementById('tabOverlay');
+  const o = selectedOverlay();
+  if(!o){ el.innerHTML='<div class="no-selection">Wähle ein Overlay in der Timeline oder links in der Liste aus. Neue Text- und Sticker-Overlays kannst du links im Panel „Overlays & Sticker“ hinzufügen.</div>'; return; }
+  const vals = computeOverlayEffective(o, localTimeForOverlay(o));
+  let html='';
+  if(o.kind==='text'){
+    html += `<div class="section-title">Inhalt</div>`;
+    html += `<div class="text-field"><label>Text</label><input type="text" id="ovContent" value="${escapeHtml(o.content)}"></div>`;
+    html += `<div class="text-field"><label>Schriftart</label><select id="ovFont" class="sel-input">${FONT_CHOICES.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>`;
+    html += `<label class="chk-row"><input type="checkbox" id="ovBold" ${o.bold?'checked':''}><span>Fett</span></label>`;
+    html += `<label class="chk-row"><input type="checkbox" id="ovItalic" ${o.italic?'checked':''}><span>Kursiv</span></label>`;
+    html += `<div class="text-field"><label>Farbe</label><input type="color" id="ovColor" value="${o.color}"></div>`;
+    html += `<div class="section-title">Rahmen &amp; Hintergrund</div>`;
+    html += `<label class="chk-row"><input type="checkbox" id="ovOutline" ${o.outline?'checked':''}><span>Textumrandung</span></label>`;
+    html += `<div class="text-row2"><div class="text-field"><label>Umrandungsfarbe</label><input type="color" id="ovOutlineColor" value="${o.outlineColor}"></div><div style="flex:1">${fieldRangeHtml('ovOutlineWidth','Stärke',1,12,1,o.outlineWidth,'px')}</div></div>`;
+    html += `<label class="chk-row"><input type="checkbox" id="ovBgBox" ${o.bgBox?'checked':''}><span>Hintergrundbox</span></label>`;
+    html += `<div class="text-field"><label>Boxfarbe</label><input type="color" id="ovBgColor" value="${rgbaToHex(o.bgColor)}"></div>`;
+    html += `<div class="section-title">Animation (Einblenden)</div>`;
+    html += `<div class="text-field"><label>Einblend-Animation</label><select id="ovAnimPreset" class="sel-input">
+      <option value="none">Keine</option><option value="slide-up">Von unten einfliegen</option>
+      <option value="slide-down">Von oben einfliegen</option><option value="pop">Pop (Skalieren)</option>
+      <option value="typewriter">Schreibmaschine</option></select></div>`;
+    html += fieldRangeHtml('ovAnimDur','Animationsdauer',0.1,2,0.1,o.animDur,'s');
+  } else if(o.kind==='image'){
+    html += `<div class="section-title">Form</div>`;
+    html += fieldRangeHtml('ovRadius','Eckenradius',0,50,1,o.radius,'%');
+  }
+  html += `<div class="section-title">Größe, Position &amp; Drehung</div>`;
+  html += `<div class="kf-clear-hint" style="font-size:10px;color:var(--text-faint);margin-bottom:8px;line-height:1.5;">Ziehe den Rahmen direkt im Vorschaubild, um Position, Größe und Drehung zu ändern – oder nutze die Regler hier. Mit „◆ Keyframe“ unter der Vorschau lässt sich alles animieren.</div>`;
+  html += fieldRangeHtml('ovSize','Größe',10,240,1,vals.size,'px');
+  html += fieldRangeHtml('ovScale','Skalierung',10,400,1,vals.scale,'%');
+  html += fieldRangeHtml('ovRot','Drehung',-180,180,1,vals.rotation,'°');
+  html += `<div class="section-title">Ein-/Ausblenden</div>`;
+  html += fieldRangeHtml('ovFadeIn','Einblenden',0,2,0.1,o.fadeIn,'s');
+  html += fieldRangeHtml('ovFadeOut','Ausblenden',0,2,0.1,o.fadeOut,'s');
+
+  el.innerHTML = html;
+
+  const delBtn = document.createElement('button');
+  delBtn.className='btn danger-outline del-full-btn'; delBtn.textContent='Overlay entfernen';
+  delBtn.addEventListener('click', ()=>removeOverlay(o.id));
+  el.appendChild(delBtn);
+
+  function bindPlainRange(id, key, dec, unit){
+    const inp = el.querySelector('#'+id);
+    if(!inp) return;
+    inp.addEventListener('input', ()=>{
+      o[key] = Number(inp.value);
+      const valEl = el.querySelector('#'+id+'Val');
+      if(valEl) valEl.textContent = Number(inp.value).toFixed(dec)+unit;
+      renderFrame();
+    });
+    inp.addEventListener('change', ()=>queueAutosave());
+  }
+  function bindOverlayKfRange(id, key, dec, unit){
+    const inp = el.querySelector('#'+id);
+    if(!inp) return;
+    inp.addEventListener('input', ()=>{
+      const v = Number(inp.value);
+      const valEl = el.querySelector('#'+id+'Val');
+      if(valEl) valEl.textContent = v.toFixed(dec)+unit;
+      setOverlayProps(o, {[key]:v});
+      renderFrame(); renderKfBar();
+    });
+    inp.addEventListener('change', ()=>queueAutosave());
+  }
+  if(o.kind==='text'){
+    const ci = el.querySelector('#ovContent');
+    ci.addEventListener('input', ()=>{ o.content=ci.value; renderFrame(); renderOverlayList(); });
+    ci.addEventListener('change', ()=>queueAutosave());
+    const fontSel = el.querySelector('#ovFont'); fontSel.value=o.fontFamily;
+    fontSel.addEventListener('change', ()=>{ o.fontFamily=fontSel.value; renderFrame(); queueAutosave(); });
+    el.querySelector('#ovBold').addEventListener('change', (e)=>{ o.bold=e.target.checked; renderFrame(); queueAutosave(); });
+    el.querySelector('#ovItalic').addEventListener('change', (e)=>{ o.italic=e.target.checked; renderFrame(); queueAutosave(); });
+    const co = el.querySelector('#ovColor');
+    co.addEventListener('input', ()=>{ o.color=co.value; renderFrame(); });
+    co.addEventListener('change', ()=>queueAutosave());
+    el.querySelector('#ovOutline').addEventListener('change', (e)=>{ o.outline=e.target.checked; renderFrame(); queueAutosave(); });
+    const oc = el.querySelector('#ovOutlineColor');
+    oc.addEventListener('input', ()=>{ o.outlineColor=oc.value; renderFrame(); });
+    oc.addEventListener('change', ()=>queueAutosave());
+    bindPlainRange('ovOutlineWidth','outlineWidth',0,'px');
+    el.querySelector('#ovBgBox').addEventListener('change', (e)=>{ o.bgBox=e.target.checked; renderFrame(); queueAutosave(); });
+    const bgc = el.querySelector('#ovBgColor');
+    bgc.addEventListener('input', ()=>{ o.bgColor = hexToRgba(bgc.value, 0.6); renderFrame(); });
+    bgc.addEventListener('change', ()=>queueAutosave());
+    const animSel = el.querySelector('#ovAnimPreset'); animSel.value=o.animPreset;
+    animSel.addEventListener('change', ()=>{ o.animPreset=animSel.value; renderFrame(); queueAutosave(); });
+    bindPlainRange('ovAnimDur','animDur',1,'s');
+  } else if(o.kind==='image'){
+    bindPlainRange('ovRadius','radius',0,'%');
+  }
+  bindOverlayKfRange('ovSize','size',0,'px');
+  bindOverlayKfRange('ovScale','scale',0,'%');
+  bindOverlayKfRange('ovRot','rotation',0,'°');
+  bindPlainRange('ovFadeIn','fadeIn',1,'s');
+  bindPlainRange('ovFadeOut','fadeOut',1,'s');
+}
+
+function rgbaToHex(rgba){
+  if(!rgba) return '#000000';
+  if(rgba.startsWith('#')) return rgba;
+  const m = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if(!m) return '#000000';
+  return '#'+[1,2,3].map(i=>Number(m[i]).toString(16).padStart(2,'0')).join('');
+}
+function hexToRgba(hex, alpha){
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function renderAudioTab(){
+  const el = document.getElementById('tabAudio');
+  const a = selectedAudio();
+  if(!a){ el.innerHTML='<div class="no-selection">Wähle einen Ton-Clip in der Timeline oder links in der Liste aus, um Lautstärke, Ein-/Ausblenden und Position zu bearbeiten.</div>'; return; }
+  el.innerHTML='';
+  const volRow = document.createElement('div');
+  volRow.className='eff-row';
+  volRow.innerHTML = `<div class="eff-head"><span class="eff-label">Lautstärke</span><span class="eff-value" id="acVolVal">${a.volume}%</span></div><input type="range" id="acVol" min="0" max="100" step="1" value="${a.volume}">`;
+  el.appendChild(volRow);
+  const fadeInRow = document.createElement('div'); fadeInRow.className='eff-row';
+  fadeInRow.innerHTML = `<div class="eff-head"><span class="eff-label">Einblenden</span><span class="eff-value" id="acFadeInVal">${(a.fadeIn||0).toFixed(1)}s</span></div><input type="range" id="acFadeIn" min="0" max="5" step="0.1" value="${a.fadeIn||0}">`;
+  el.appendChild(fadeInRow);
+  const fadeOutRow = document.createElement('div'); fadeOutRow.className='eff-row';
+  fadeOutRow.innerHTML = `<div class="eff-head"><span class="eff-label">Ausblenden</span><span class="eff-value" id="acFadeOutVal">${(a.fadeOut||0).toFixed(1)}s</span></div><input type="range" id="acFadeOut" min="0" max="5" step="0.1" value="${a.fadeOut||0}">`;
+  el.appendChild(fadeOutRow);
+  const info = document.createElement('div');
+  info.className='no-selection'; info.style.paddingTop='0';
+  info.textContent = `Startet bei ${fmtTime(a.startTime)} · Länge ${fmtTime(a.trimOut-a.trimIn)}. Ziehe den Block in der „Ton“-Spur, um ihn zu verschieben, oder die Ränder, um zu trimmen.`;
+  el.appendChild(info);
+  const delBtn = document.createElement('button');
+  delBtn.className='btn danger-outline del-full-btn'; delBtn.textContent='Ton entfernen';
+  delBtn.style.marginTop='10px';
+  delBtn.addEventListener('click', ()=>removeAudioClip(a.id));
+  el.appendChild(delBtn);
+  const vol = el.querySelector('#acVol');
+  vol.addEventListener('input', ()=>{
+    a.volume = Number(vol.value);
+    el.querySelector('#acVolVal').textContent=a.volume+'%';
+    if(a.gainNode) a.gainNode.gain.value = (document.getElementById('volumeRange').value/100)*(a.volume/100);
+  });
+  vol.addEventListener('change', ()=>queueAutosave());
+  const fi = el.querySelector('#acFadeIn');
+  fi.addEventListener('input', ()=>{ a.fadeIn=Number(fi.value); el.querySelector('#acFadeInVal').textContent=a.fadeIn.toFixed(1)+'s'; });
+  fi.addEventListener('change', ()=>queueAutosave());
+  const fo = el.querySelector('#acFadeOut');
+  fo.addEventListener('input', ()=>{ a.fadeOut=Number(fo.value); el.querySelector('#acFadeOutVal').textContent=a.fadeOut.toFixed(1)+'s'; });
+  fo.addEventListener('change', ()=>queueAutosave());
+}
+
+function fieldRangeHtml(id,label,min,max,step,val,unit){
+  return `<div class="eff-row"><div class="eff-head"><span class="eff-label">${label}</span><span class="eff-value" id="${id}Val">${Number(val).toFixed(step<1?1:0)}${unit||''}</span></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"></div>`;
 }
 
 function renderKfBar(){
@@ -2080,9 +2836,25 @@ function renderKfBar(){
   });
 }
 
-// ===================================================================
-// 10. EXPORT (Video-Aufnahme) – verbessert: höhere Geschwindigkeit stabiler
-// ===================================================================
+function renderAll(){
+  renderMediaList();
+  renderAudioList();
+  renderOverlayList();
+  renderTimeline();
+  renderEffectsTab();
+  renderTransitionTab();
+  renderKeyframesTab();
+  renderOverlayTab();
+  renderAudioTab();
+  renderKfBar();
+  renderDirty = true;
+  renderFrame();
+  updateUndoButtons();
+}
+
+// ================================================================
+// 12. EXPORT (Video-Aufnahme)
+// ================================================================
 function pickMimeType(){
   const candidates = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   for(const c of candidates){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
@@ -2219,9 +2991,9 @@ document.getElementById('exportCancelBtn').addEventListener('click', ()=>{
   finishExportRecording();
 });
 
-// ===================================================================
-// 11. AUTOSAVE & PROJEKT LADEN/SPEICHERN
-// ===================================================================
+// ================================================================
+// 13. AUTOSAVE & PROJEKT LADEN/SPEICHERN
+// ================================================================
 let autosaveTimer=null;
 let hasStorageApi = (typeof window.storage !== 'undefined');
 let overlayImgCache = {};
@@ -2396,357 +3168,173 @@ document.getElementById('importProjectInput').addEventListener('change', async (
   }
 });
 
-// ===================================================================
-// 12. INITIALISIERUNG & RENDER-ALL
-// ===================================================================
-function renderAll(){
-  renderMediaList();
-  renderAudioList();
-  renderOverlayList();
-  renderTimeline();
-  renderEffectsTab();
-  renderTransitionTab();
-  renderKeyframesTab();
-  renderOverlayTab();
-  renderAudioTab();
-  renderKfBar();
-  renderDirty = true;
-  renderFrame();
-  updateUndoButtons();
+// ================================================================
+// 14. KONTEXTMENÜ, MOBILE NAV, ICON-RAIL, BERICHT, STICKER, ETC.
+// ================================================================
+const contextMenuEl = document.getElementById('contextMenu');
+function showContextMenu(x, y, items){
+  contextMenuEl.innerHTML='';
+  items.forEach(item=>{
+    const btn=document.createElement('button');
+    btn.className='context-menu-item';
+    btn.textContent=item.label;
+    btn.addEventListener('click', ()=>{
+      hideContextMenu();
+      item.action();
+    });
+    contextMenuEl.appendChild(btn);
+  });
+  contextMenuEl.style.left = Math.min(x, window.innerWidth-200)+'px';
+  contextMenuEl.style.top = Math.min(y, window.innerHeight- items.length*36 - 10)+'px';
+  contextMenuEl.classList.remove('hidden');
 }
-
-// Hier die restlichen UI-Render-Funktionen einfügen (renderMediaList, etc.)
-// ... (sie sind im Original vorhanden, ich lasse sie aus Platzgründen hier weg,
-// aber sie werden in der finalen Datei enthalten sein. Siehe vollständigen Code)
-
-function renderAll(){
-  renderMediaList();
-  renderAudioList();
-  renderOverlayList();
-  renderTimeline();
-  renderEffectsTab();
-  renderTransitionTab();
-  renderKeyframesTab();
-  renderOverlayTab();
-  renderAudioTab();
-  renderKfBar();
-  renderFrame();
-}
-
-/* ===================== Projektname ===================== */
-const projNameInput = document.getElementById('projectName');
-projNameInput.addEventListener('input', ()=>{ state.projectName = projNameInput.value; });
-projNameInput.addEventListener('change', ()=>queueAutosave());
-
-/* ===================== Autospeicherung ===================== */
-async function buildProjectMetadata(){
-  const clips = state.clips.map(c=>({
-    id:c.id, name:c.name, duration:c.duration, trimIn:c.trimIn, trimOut:c.trimOut,
-    effects:c.effects, keyframes:c.keyframes, text:c.text, flipH:c.flipH, transitionOut:c.transitionOut,
-    fileSize: c.sourceFile? c.sourceFile.size : (c.fileSizeHint||null),
-  }));
-  const audioClips = await Promise.all(state.audioClips.map(async a=>{
-    let embedded=null;
-    if(a.sourceFile && a.sourceFile.size<=MAX_AUDIO_EMBED_BYTES){
-      try{ embedded = await fileToDataURL(a.sourceFile); }catch(e){}
-    }
-    return {id:a.id, name:a.name, duration:a.duration, trimIn:a.trimIn, trimOut:a.trimOut, startTime:a.startTime, volume:a.volume, fadeIn:a.fadeIn||0, fadeOut:a.fadeOut||0, embeddedAudio:embedded};
-  }));
-  const overlays = await Promise.all(state.overlays.map(async o=>{
-    if(o.kind==='image'){
-      let embedded=null;
-      if(o.sourceFile && o.sourceFile.size<=MAX_IMG_EMBED_BYTES){
-        try{ embedded = await fileToDataURL(o.sourceFile); }catch(e){}
-      }
-      return {id:o.id, kind:o.kind, start:o.start, end:o.end, x:o.x, y:o.y, scale:o.scale, rotation:o.rotation,
-        size:o.size, radius:o.radius, fadeIn:o.fadeIn, fadeOut:o.fadeOut, naturalW:o.naturalW, naturalH:o.naturalH,
-        keyframes:o.keyframes, embeddedImage:embedded};
-    }
-    return {id:o.id, kind:o.kind, start:o.start, end:o.end, x:o.x, y:o.y, scale:o.scale, rotation:o.rotation,
-      content:o.content, size:o.size, color:o.color, fontFamily:o.fontFamily, bold:o.bold, italic:o.italic,
-      outline:o.outline, outlineColor:o.outlineColor, outlineWidth:o.outlineWidth, bgBox:o.bgBox, bgColor:o.bgColor,
-      animPreset:o.animPreset, animDur:o.animDur, fadeIn:o.fadeIn, fadeOut:o.fadeOut, keyframes:o.keyframes};
-  }));
-  return {
-    version:4, projectName: state.projectName, createdAt: state.createdAt, savedAt: Date.now(),
-    canvasAspect: state.canvasAspect, canvasW: canvas.width, canvasH: canvas.height,
-    exportHistory: state.exportHistory, clips, audioClips, overlays,
-  };
-}
-function setSaveStatus(mode, text){
-  const box = document.getElementById('saveStatus');
-  box.className='save-status '+mode;
-  document.getElementById('saveStatusText').textContent = text;
-}
-async function autosaveNow(){
-  if(!hasStorageApi){ setSaveStatus('', 'kein Auto-Speicher in dieser Ansicht'); return; }
-  setSaveStatus('pending','wird gespeichert…');
-  try{
-    const payload = await buildProjectMetadata();
-    await window.storage.set(AUTOSAVE_KEY, JSON.stringify(payload), false);
-    state.lastSavedAt = Date.now();
-    setSaveStatus('saved', 'gespeichert · '+fmtClock2(state.lastSavedAt));
-  }catch(e){
-    setSaveStatus('error','Speichern fehlgeschlagen');
-    console.error('Autosave-Fehler', e);
+function hideContextMenu(){ contextMenuEl.classList.add('hidden'); }
+document.addEventListener('click', hideContextMenu);
+document.addEventListener('contextmenu', (e)=>{
+  if(!contextMenuEl.classList.contains('hidden')){
+    e.preventDefault();
+    hideContextMenu();
   }
-}
-function queueAutosave(){
-  setSaveStatus('pending','ungespeicherte Änderungen…');
-  clearTimeout(autosaveTimer);
-  autosaveTimer = setTimeout(autosaveNow, 1200);
-}
-setInterval(()=>{ if(state.clips.length>0 || state.audioClips.length>0 || state.overlays.length>0) autosaveNow(); }, 20000);
-
-function loadProjectFromData(data){
-  state.projectName = data.projectName || 'Wiederhergestelltes Projekt';
-  state.createdAt = data.createdAt || Date.now();
-  state.exportHistory = data.exportHistory || [];
-  document.getElementById('projectName').value = state.projectName;
-  setCanvasAspect(data.canvasAspect || '16:9');
-  if(data.canvasW && data.canvasH){ canvas.width=data.canvasW; canvas.height=data.canvasH; }
-
-  state.clips = (data.clips||[]).map(m=>{
-    if(m.embeddedVideo){
-      const blob = dataURLToBlob(m.embeddedVideo);
-      const asFile = new File([blob], m.name, {type: blob.type});
-      return createClipFromFile(asFile, m);
-    }
-    return createPlaceholderClip(m);
-  });
-
-  state.audioClips = (data.audioClips||[]).map(m=>{
-    if(m.embeddedAudio){
-      const blob = dataURLToBlob(m.embeddedAudio);
-      const file = new File([blob], m.name, {type: blob.type});
-      const url = URL.createObjectURL(file);
-      const el = document.createElement('audio');
-      el.src=url; el.preload='auto'; el.crossOrigin='anonymous';
-      document.getElementById('hiddenVideos').appendChild(el);
-      return {id:m.id, name:m.name, sourceFile:file, url, audioEl:el, duration:m.duration,
-        trimIn:m.trimIn, trimOut:m.trimOut, startTime:m.startTime, volume:m.volume,
-        fadeIn:m.fadeIn||0, fadeOut:m.fadeOut||0, gainNode:null, connected:false, needsRelink:false};
-    }
-    return {id:m.id, name:m.name, sourceFile:null, url:null, audioEl:null, duration:m.duration,
-      trimIn:m.trimIn, trimOut:m.trimOut, startTime:m.startTime, volume:m.volume,
-      fadeIn:m.fadeIn||0, fadeOut:m.fadeOut||0, gainNode:null, connected:false, needsRelink:true};
-  });
-
-  state.overlays = (data.overlays||[]).map(m=>{
-    const base = makeOverlayDefaults(m.kind);
-    const merged = Object.assign(base, m);
-    merged.keyframes = Array.isArray(m.keyframes) ? m.keyframes.map(k=>({t:k.t,v:{...k.v}})) : [];
-    if(m.kind==='image'){
-      let contentUrl=null, sourceFile=null;
-      if(m.embeddedImage){
-        const blob = dataURLToBlob(m.embeddedImage);
-        sourceFile = new File([blob], 'sticker', {type:blob.type});
-        contentUrl = URL.createObjectURL(blob);
-      }
-      merged.content = contentUrl;
-      merged.sourceFile = sourceFile;
-      if(contentUrl){ overlayImgCache[merged.id] = createOverlayImageEl(contentUrl); }
-    }
-    return merged;
-  });
-
-  state.selection = {type:null,id:null};
-  seekTo(0);
-  renderAll();
-}
-function showRestoreBanner(){
-  const b = document.createElement('div');
-  b.className='restore-banner';
-  b.innerHTML = `<span>Ein vorheriges Projekt wurde gefunden und automatisch geladen. Videos ohne eingebettete Vorschau bitte neu zuordnen.</span><button>×</button>`;
-  b.querySelector('button').addEventListener('click', ()=>b.remove());
-  document.body.appendChild(b);
-  setTimeout(()=>b.remove(), 14000);
-}
-async function tryRestoreAutosave(){
-  if(!hasStorageApi) return;
-  try{
-    const res = await window.storage.get(AUTOSAVE_KEY, false);
-    if(res && res.value){
-      const data = JSON.parse(res.value);
-      if(data && ((data.clips&&data.clips.length)||(data.audioClips&&data.audioClips.length)||(data.overlays&&data.overlays.length))){
-        loadProjectFromData(data);
-        showRestoreBanner();
-        setSaveStatus('saved','vorheriges Projekt geladen');
-      }
-    }
-  }catch(e){}
-}
-
-/* ===================== Projekt exportieren / importieren (Datei) ===================== */
-document.getElementById('btnExportProject').addEventListener('click', async ()=>{
-  const base = await buildProjectMetadata();
-  const clipsFull = await Promise.all(state.clips.map(async (c,i)=>{
-    let embedded=null;
-    if(c.sourceFile && c.sourceFile.size<=MAX_EMBED_BYTES){
-      try{ embedded = await fileToDataURL(c.sourceFile); }catch(e){}
-    }
-    return {...base.clips[i], embeddedVideo: embedded};
-  }));
-  const data = {...base, clips: clipsFull};
-  downloadBlob(JSON.stringify(data), sanitizeFilename(state.projectName)+'.vidraproj.json', 'application/json');
-  state.lastSavedAt = Date.now();
-  setSaveStatus('saved','als Datei gesichert · '+fmtClock2(state.lastSavedAt));
 });
-document.getElementById('importProjectInput').addEventListener('change', async (e)=>{
+
+// Media-Inputs
+document.getElementById('mediaInput').addEventListener('change', e=>{
+  const files = Array.from(e.target.files||[]);
+  files.forEach(file=>{
+    const clip = createClipFromFile(file);
+    state.clips.push(clip);
+    if(!state.selection.type) state.selection = {type:'video', id:clip.id};
+  });
+  e.target.value='';
+  renderAll(); queueAutosave();
+});
+document.getElementById('audioInput').addEventListener('change', e=>{
+  const files = Array.from(e.target.files||[]);
+  files.forEach(file=>{
+    const url = URL.createObjectURL(file);
+    const el = document.createElement('audio');
+    el.src=url; el.preload='auto'; el.crossOrigin='anonymous';
+    document.getElementById('hiddenVideos').appendChild(el);
+    const a = {id:uid(), name:file.name, sourceFile:file, url, audioEl:el, duration:0, trimIn:0, trimOut:0,
+      startTime: state.playheadTime, volume:100, fadeIn:0, fadeOut:0, gainNode:null, connected:false, needsRelink:false};
+    el.addEventListener('loadedmetadata', ()=>{ a.duration=el.duration; a.trimOut=el.duration; renderAll(); queueAutosave(); });
+    state.audioClips.push(a);
+    state.selection = {type:'audio', id:a.id};
+  });
+  e.target.value='';
+  renderAll(); queueAutosave();
+});
+document.getElementById('btnAddText').addEventListener('click', ()=>{
+  const t=state.playheadTime;
+  const o = makeOverlayDefaults('text'); o.start=t; o.end=t+3;
+  state.overlays.push(o);
+  state.selection={type:'overlay', id:o.id};
+  renderAll(); queueAutosave();
+});
+document.getElementById('stickerImgInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   e.target.value='';
   if(!file) return;
-  try{
-    const text = await file.text();
-    const data = JSON.parse(text);
-    loadProjectFromData(data);
-    queueAutosave();
-  }catch(err){
-    alert('Diese Projektdatei konnte nicht gelesen werden.');
-    console.error(err);
-  }
+  const url = URL.createObjectURL(file);
+  const img = createOverlayImageEl(url);
+  img.onload = ()=>{
+    const t=state.playheadTime;
+    const o = makeOverlayDefaults('image');
+    o.start=t; o.end=t+3; o.content=url; o.sourceFile=file;
+    o.naturalW=img.naturalWidth; o.naturalH=img.naturalHeight;
+    o.size=Math.min(img.naturalWidth,260);
+    overlayImgCache[o.id]=img;
+    state.overlays.push(o);
+    state.selection={type:'overlay', id:o.id};
+    renderAll(); queueAutosave();
+  };
 });
 
-/* ===================== Video-Export (Aufnahme) ===================== */
-function pickMimeType(){
-  const candidates = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-  for(const c of candidates){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
-  return '';
+function buildStickerUI(){
+  const catRow = document.getElementById('stickerCatRow');
+  catRow.innerHTML='';
+  Object.keys(STICKER_CATS).forEach(cat=>{
+    const b=document.createElement('button');
+    b.className='cat-pill'+(cat===activeStickerCat?' active':'');
+    b.textContent=cat;
+    b.addEventListener('click', ()=>{ activeStickerCat=cat; buildStickerUI(); });
+    catRow.appendChild(b);
+  });
+  const grid = document.getElementById('stickerGrid');
+  grid.innerHTML='';
+  STICKER_CATS[activeStickerCat].forEach(em=>{
+    const b=document.createElement('button');
+    b.textContent=em;
+    b.addEventListener('click', ()=>{
+      const t=state.playheadTime;
+      const o = makeOverlayDefaults('sticker'); o.start=t; o.end=t+3; o.content=em;
+      state.overlays.push(o);
+      state.selection={type:'overlay', id:o.id};
+      renderAll(); queueAutosave();
+    });
+    grid.appendChild(b);
+  });
 }
-function timelineHasTransitions(){
-  return state.clips.some((c,i)=> i<state.clips.length-1 && getEffectiveTransitionDur(c, state.clips[i+1])>0);
-}
-document.getElementById('btnExportVideo').addEventListener('click', ()=>{
-  if(timelineLength()<=0){ alert('Füge zuerst mindestens ein Video, einen Ton oder ein Overlay hinzu.'); return; }
-  if(state.clips.some(c=>c.needsRelink) || state.audioClips.some(a=>a.needsRelink)){
-    alert('Es gibt Clips ohne verknüpfte Datei. Bitte zuerst neu zuordnen.'); return;
-  }
-  openExportSpeedModal();
-});
 
-/* ---- Vorab-Dialog: Export-Geschwindigkeit wählen ---- */
-function openExportSpeedModal(){
-  const total = timelineLength();
-  const hasTrans = timelineHasTransitions();
-  const modal = document.getElementById('exportSpeedModal');
-  const body = document.getElementById('exportSpeedBody');
-  const speeds = [1,2,4];
-  body.innerHTML = `
-    <p class="exp-intro">Das Rendern läuft in Echtzeit durch die Timeline. Eine höhere Geschwindigkeit macht den Export schneller, kann aber – besonders bei älteren Geräten – vereinzelt Bildaussetzer verursachen.${hasTrans? ' Während Übergängen wird automatisch auf 1× zurückgeschaltet, damit Überblendungen sauber bleiben.' : ''}</p>
-    <div class="speed-pill-row" id="speedPillRow">
-      ${speeds.map(s=>`<button class="speed-pill${s===1?' active':''}" data-speed="${s}">${s}×<span class="speed-pill-sub">${fmtClock(total/s)}</span></button>`).join('')}
-    </div>`;
-  let chosenSpeed = 1;
-  body.querySelectorAll('.speed-pill').forEach(p=>{
-    p.addEventListener('click', ()=>{
-      body.querySelectorAll('.speed-pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
-      chosenSpeed = Number(p.dataset.speed);
+// Icon-Rail & mobile Nav
+(function(){
+  const railBtns = Array.from(document.querySelectorAll('.rail-btn[data-scroll]'));
+  const mediaListEl = document.querySelector('.media-panel');
+  railBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = document.getElementById(btn.dataset.scroll);
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      railBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
     });
   });
-  document.getElementById('exportSpeedConfirm').onclick = ()=>{
-    modal.classList.add('hidden');
-    startExportRecording(chosenSpeed);
-  };
-  document.getElementById('exportSpeedCancel').onclick = ()=>modal.classList.add('hidden');
-  document.getElementById('exportSpeedCancelBtn2').onclick = ()=>modal.classList.add('hidden');
-  modal.classList.remove('hidden');
-}
-
-function startExportRecording(speed){
-  ensureAudioGraph();
-  if(audioCtx.state==='suspended') audioCtx.resume();
-  state.clips.forEach(connectClipAudio);
-  state.audioClips.forEach(connectAudioClipGraph);
-
-  const canvasStream = canvas.captureStream(30);
-  const combined = new MediaStream([...canvasStream.getVideoTracks(), ...streamDest.stream.getAudioTracks()]);
-  const mime = pickMimeType();
-  try{
-    mediaRecorder = mime? new MediaRecorder(combined,{mimeType:mime}) : new MediaRecorder(combined);
-  }catch(e){
-    alert('Videoaufnahme wird von diesem Browser nicht unterstützt.');
-    return;
-  }
-  recChunks=[];
-  mediaRecorder.ondataavailable = (e)=>{ if(e.data && e.data.size>0) recChunks.push(e.data); };
-  mediaRecorder.onstop = onRecordingStopped;
-  state.isExporting = true;
-  state.exportCancelled = false;
-  state.exportSpeed = speed||1;
-  exportTotalDuration = timelineLength();
-  recStartTime = Date.now();
-  document.getElementById('recIndicator').classList.remove('hidden');
-  document.getElementById('btnExportVideo').disabled = true;
-  showExportProgressScreen();
-  seekTo(0);
-  renderFrame(); // Hintergrund sofort auf Schwarz setzen
-  mediaRecorder.start(250);
-  requestAnimationFrame(()=>togglePlay());
-}
-function finishExportRecording(){
-  if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
-}
-function onRecordingStopped(){
-  const cancelled = state.exportCancelled;
-  const blob = new Blob(recChunks, {type:'video/webm'});
-  if(!cancelled){
-    const filename = sanitizeFilename(state.projectName)+'.webm';
-    downloadBlob(blob, filename, 'video/webm');
-    const durSec = (Date.now()-recStartTime)/1000;
-    state.exportHistory.push({
-      timestamp: Date.now(), filename, durationSec: Math.round(durSec*10)/10,
-      sizeMB: Math.round(blob.size/1024/1024*10)/10, resolution: canvas.width+'×'+canvas.height,
-      speed: state.exportSpeed,
+  const railAddText = document.getElementById('railAddText');
+  if(railAddText){
+    railAddText.addEventListener('click', ()=>{
+      document.getElementById('secOverlay').scrollIntoView({behavior:'smooth', block:'start'});
+      document.getElementById('btnAddText').click();
     });
-    queueAutosave();
   }
-  recChunks=[];
-  state.isExporting=false;
-  state.exportCancelled=false;
-  resetAllPlaybackRates();
-  document.getElementById('recIndicator').classList.add('hidden');
-  document.getElementById('btnExportVideo').disabled = false;
-  hideExportProgressScreen();
-  renderFrame(); // Hintergrund wieder hell
-}
+  if(mediaListEl){
+    const sections = ['secVideo','secAudio','secOverlay'].map(id=>document.getElementById(id)).filter(Boolean);
+    let ticking = false;
+    const updateActive = ()=>{
+      const panelTop = mediaListEl.getBoundingClientRect().top;
+      let current = sections[0];
+      sections.forEach(s=>{
+        if(s.getBoundingClientRect().top - panelTop < 24) current = s;
+      });
+      const btn = railBtns.find(b=>b.dataset.scroll===current.id);
+      if(btn && !btn.classList.contains('active')){ railBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+      ticking = false;
+    };
+    mediaListEl.addEventListener('scroll', ()=>{
+      if(!ticking){ requestAnimationFrame(updateActive); ticking = true; }
+    }, { passive:true });
+    updateActive();
+  }
+})();
 
-/* ---- Fortschritts-Screen: nur Anzeige + Abbrechen, keine Einstellungen ---- */
-function showExportProgressScreen(){
-  const el = document.getElementById('exportProgressScreen');
-  document.getElementById('exportProgressSpeed').textContent = state.exportSpeed+'×';
-  document.getElementById('exportProgressRes').textContent = canvas.width+'×'+canvas.height;
-  updateExportProgressUI(true);
-  el.classList.remove('hidden');
-}
-function hideExportProgressScreen(){
-  document.getElementById('exportProgressScreen').classList.add('hidden');
-}
-function updateExportProgressUI(force){
-  if(!state.isExporting && !force) return;
-  const elapsedReal = (Date.now()-recStartTime)/1000;
-  const total = Math.max(exportTotalDuration, 0.001);
-  const played = clamp(state.playheadTime, 0, total);
-  const fracByTimeline = played/total;
-  const pct = clamp(fracByTimeline*100, 0, 100);
-  const remainingTimelineSecs = Math.max(0, total-played);
-  const estRemainingReal = remainingTimelineSecs / Math.max(state.exportSpeed,1);
-  document.getElementById('exportProgressFill').style.width = pct.toFixed(1)+'%';
-  document.getElementById('exportProgressPct').textContent = Math.round(pct)+'%';
-  const ring = document.getElementById('exportRingFill');
-  if(ring){ const circumference=326.7256; ring.style.strokeDashoffset = (circumference*(1-pct/100)).toFixed(2); }
-  document.getElementById('exportProgressElapsed').textContent = fmtClock(elapsedReal);
-  document.getElementById('exportProgressRemaining').textContent = pct>=99.5 ? 'wird abgeschlossen…' : ('noch ca. '+fmtClock(estRemainingReal));
-  document.getElementById('exportProgressTimeline').textContent = fmtClock(played)+' / '+fmtClock(total);
-  document.getElementById('recTime').textContent = fmtClock(elapsedReal);
-}
-document.getElementById('exportCancelBtn').addEventListener('click', ()=>{
-  if(!state.isExporting) return;
-  state.exportCancelled = true;
-  finishExportRecording();
+document.querySelectorAll('.mobile-nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mobile-nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('workspace').dataset.mobile = btn.dataset.target;
+  });
 });
 
-/* ===================== Projektbericht ===================== */
+// Tabs
+const TAB_IDS = {effects:'tabEffects', transition:'tabTransition', keyframes:'tabKeyframes', overlay:'tabOverlay', audio:'tabAudio'};
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
+    btn.classList.add('active');
+    document.getElementById(TAB_IDS[btn.dataset.tab]).classList.remove('hidden');
+  });
+});
+
+// Bericht
 function buildReportText(){
   const lines=[];
   lines.push(`PROJEKTBERICHT`);
@@ -2802,8 +3390,9 @@ document.getElementById('reportDownload').addEventListener('click', ()=>{
   downloadBlob(buildReportText(), sanitizeFilename(state.projectName)+'_bericht.txt', 'text/plain');
 });
 
-
-// Start
+// ================================================================
+// 15. START
+// ================================================================
 buildStickerUI();
 setCanvasAspect('16:9');
 setSaveStatus('', hasStorageApi? 'noch nicht gespeichert' : 'Auto-Speicher nicht verfügbar');
