@@ -1131,17 +1131,47 @@ function attachVideoElement(clip, isRestore){
   v.src = clip.url; v.preload='auto'; v.playsInline=true; v.muted=false; v.crossOrigin='anonymous';
   document.getElementById('hiddenVideos').appendChild(v);
   clip.videoEl = v;
-  v.addEventListener('loadedmetadata', ()=>{
-    if(!isRestore || !clip.duration){ clip.duration=v.duration; clip.trimIn=0; clip.trimOut=v.duration; }
-    else { clip.trimOut = Math.min(clip.trimOut||v.duration, v.duration); clip.duration=v.duration; }
+
+  let settled = false;
+  const finalizeDuration = (dur)=>{
+    if(settled) return; settled=true;
+    if(!isRestore || !clip.duration){ clip.duration=dur; clip.trimIn=0; clip.trimOut=dur; }
+    else { clip.trimOut = Math.min(clip.trimOut||dur, dur); clip.duration=dur; }
     generateThumb(clip);
     renderAll(); queueAutosave();
-  });
-  v.addEventListener('error', ()=>{
+  };
+  const fail = ()=>{
+    if(settled) return; settled=true;
     toast(`„${clip.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
     if(state.clips.some(c=>c.id===clip.id)) removeClip(clip.id);
     else { renderAll(); queueAutosave(); }
+  };
+
+  v.addEventListener('loadedmetadata', ()=>{
+    if(isFinite(v.duration) && v.duration>0){
+      finalizeDuration(v.duration);
+      return;
+    }
+    // Bekannter Browser-Bug: Von MediaRecorder erzeugte WebM-Dateien (z.B. eigene
+    // Exporte) liefern anfangs duration=Infinity/NaN. Ein Seek ans (virtuelle) Ende
+    // zwingt den Browser, die tatsächliche Länge zu berechnen.
+    const forceTimeout = setTimeout(fail, 6000);
+    const onTimeUpdate = ()=>{
+      v.removeEventListener('timeupdate', onTimeUpdate);
+      clearTimeout(forceTimeout);
+      const real = isFinite(v.duration) && v.duration>0 ? v.duration : 0;
+      v.currentTime = 0;
+      if(real>0) finalizeDuration(real);
+      else fail();
+    };
+    v.addEventListener('timeupdate', onTimeUpdate);
+    try{ v.currentTime = 1e10; }
+    catch(e){ clearTimeout(forceTimeout); fail(); }
   });
+  v.addEventListener('error', fail);
+  // Sicherheitsnetz: falls weder 'loadedmetadata' noch 'error' jemals feuern
+  // (z.B. bei einer stillschweigend hängenden Netzwerk-/Decoder-Anfrage).
+  setTimeout(()=>{ if(!settled && clip.duration<=0) fail(); }, 12000);
 }
 function generateThumb(clip){
   try{
@@ -2199,16 +2229,42 @@ function addAudioFiles(files){
     document.getElementById('hiddenVideos').appendChild(el);
     const a = {id:uid(), name:file.name, sourceFile:file, url, audioEl:el, duration:0, trimIn:0, trimOut:0,
       startTime: state.playheadTime, volume:100, fadeIn:0, fadeOut:0, gainNode:null, connected:false, needsRelink:false};
-    el.addEventListener('loadedmetadata', ()=>{ a.duration=el.duration; a.trimOut=el.duration; renderAll(); queueAutosave(); });
-    el.addEventListener('error', ()=>{
-      toast(`„${a.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
-      if(state.audioClips.some(x=>x.id===a.id)) removeAudioClip(a.id);
-    });
+    attachAudioLoadHandling(a, el);
     state.audioClips.push(a);
     state.selection = {type:'audio', id:a.id};
     added++;
   });
   if(added>0){ renderAll(); queueAutosave(); pushHistory(); }
+}
+function attachAudioLoadHandling(a, el){
+  let settled = false;
+  const finalizeDuration = (dur)=>{
+    if(settled) return; settled=true;
+    a.duration=dur; a.trimOut=dur; renderAll(); queueAutosave();
+  };
+  const fail = ()=>{
+    if(settled) return; settled=true;
+    toast(`„${a.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
+    if(state.audioClips.some(x=>x.id===a.id)) removeAudioClip(a.id);
+  };
+  el.addEventListener('loadedmetadata', ()=>{
+    if(isFinite(el.duration) && el.duration>0){ finalizeDuration(el.duration); return; }
+    // Gleicher Browser-Bug wie bei Video: aufgenommene WebM/Ogg-Dateien liefern
+    // anfangs duration=Infinity/NaN, bis ein Seek die echte Länge erzwingt.
+    const forceTimeout = setTimeout(fail, 6000);
+    const onTimeUpdate = ()=>{
+      el.removeEventListener('timeupdate', onTimeUpdate);
+      clearTimeout(forceTimeout);
+      const real = isFinite(el.duration) && el.duration>0 ? el.duration : 0;
+      el.currentTime = 0;
+      if(real>0) finalizeDuration(real); else fail();
+    };
+    el.addEventListener('timeupdate', onTimeUpdate);
+    try{ el.currentTime = 1e10; }
+    catch(e){ clearTimeout(forceTimeout); fail(); }
+  });
+  el.addEventListener('error', fail);
+  setTimeout(()=>{ if(!settled && a.duration<=0) fail(); }, 12000);
 }
 document.getElementById('audioInput').addEventListener('change', e=>{
   addAudioFiles(Array.from(e.target.files||[]));
@@ -2236,15 +2292,7 @@ function relinkAudioClip(id, file){
   const a = {id:old.id, name:old.name, sourceFile:file, url, audioEl:el, duration:old.duration,
     trimIn:old.trimIn, trimOut:old.trimOut, startTime:old.startTime, volume:old.volume,
     fadeIn:old.fadeIn||0, fadeOut:old.fadeOut||0, gainNode:null, connected:false, needsRelink:false};
-  el.addEventListener('loadedmetadata', ()=>{ renderAll(); queueAutosave(); });
-  el.addEventListener('error', ()=>{
-    toast(`„${a.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
-    const stillIdx = state.audioClips.findIndex(x=>x.id===a.id);
-    if(stillIdx>=0){
-      state.audioClips[stillIdx] = {...old, needsRelink:true};
-      renderAll(); queueAutosave();
-    }
-  });
+  attachAudioLoadHandling(a, el);
   state.audioClips[idx]=a;
   renderAll(); queueAutosave();
 }
