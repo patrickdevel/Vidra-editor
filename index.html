@@ -129,14 +129,40 @@ input,select{font-family:var(--font-ui);}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .btn:disabled:hover{background:var(--bg-elevated);}
 .file-btn{display:inline-flex;align-items:center;}
+.icon-only-btn{padding:9px 11px;}
 
 /* ---------- Workspace ---------- */
-.workspace{flex:1;display:grid;grid-template-columns:52px 228px 1fr 320px;min-height:0;}
-.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;}
+.workspace{flex:1;display:grid;grid-template-columns:52px var(--media-w,228px) 1fr var(--inspector-w,320px);min-height:0;}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;position:relative;}
 .media-panel{border-right:1px solid var(--border-soft);overflow-y:auto;}
 .inspector-panel{border-left:1px solid var(--border-soft);}
 .panel-head{padding:15px 14px 9px;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .panel-section{border-top:1px solid var(--border-soft);padding-top:6px;margin-top:8px;}
+
+/* ---------- Panel resize handles ---------- */
+.panel-resize-handle{
+  position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;z-index:15;background:transparent;
+  transition:background .15s var(--ease);
+}
+.panel-resize-handle:hover,.panel-resize-handle.dragging{background:rgba(212,245,100,.18);}
+.panel-resize-handle::after{
+  content:'';position:absolute;top:50%;left:50%;width:3px;height:34px;transform:translate(-50%,-50%);
+  border-radius:var(--radius-pill);background:var(--border);transition:background .15s var(--ease);
+}
+.panel-resize-handle:hover::after,.panel-resize-handle.dragging::after{background:var(--accent);}
+.media-panel .panel-resize-handle{right:-4px;}
+.inspector-panel .panel-resize-handle{left:-4px;}
+@media (max-width:900px){ .panel-resize-handle{display:none;} }
+
+/* ---------- Drag & drop zones ---------- */
+.dropzone-active{outline:2px dashed var(--accent) !important;outline-offset:-4px;background:var(--accent-soft) !important;}
+.drop-overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  background:rgba(12,13,17,.82);border:2px dashed var(--accent);border-radius:var(--radius-m);z-index:30;
+  color:var(--accent);font-size:12.5px;font-weight:600;pointer-events:none;text-align:center;padding:12px;
+  animation:modal-fade .12s var(--ease) both;
+}
+.drop-overlay .doi{font-size:22px;}
 
 /* ---------- Icon rail ---------- */
 .icon-rail{
@@ -197,9 +223,9 @@ input,select{font-family:var(--font-ui);}
 .canvas-wrap{
   flex:1;display:flex;align-items:center;justify-content:center;min-height:0;position:relative;padding:22px;
   background:
-    radial-gradient(circle at 20% 0%, rgba(139,123,255,.07) 0%, transparent 45%),
-    radial-gradient(circle at 85% 100%, rgba(212,245,100,.05) 0%, transparent 40%),
-    var(--bg-base);
+    radial-gradient(circle at 20% 0%, rgba(139,123,255,.10) 0%, transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(212,245,100,.08) 0%, transparent 40%),
+    var(--bg-elevated);
 }
 #preview{
   width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;background:#000;
@@ -237,6 +263,8 @@ input,select{font-family:var(--font-ui);}
 .transport-btn:hover{background:var(--bg-elevated-2);transform:translateY(-1px);}
 .transport-btn:active{transform:scale(.92);}
 .transport-btn.accent{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);box-shadow:0 3px 12px rgba(212,245,100,.22);}
+.transport-btn:disabled{opacity:.35;cursor:not-allowed;}
+.transport-btn:disabled:hover{background:var(--bg-elevated);transform:none;}
 .timecode{font-family:var(--font-mono);font-size:12px;color:var(--accent);}
 .timecode.muted{color:var(--text-faint);}
 .timecode-sep{color:var(--text-faint);}
@@ -263,9 +291,34 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .kf-count{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);white-space:nowrap;}
 .kf-empty{font-size:11.5px;color:var(--text-faint);padding:3px 6px;}
 
+/* keyframe-set flash feedback */
+@keyframes kf-pop{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(212,245,100,.7);}
+  40%{transform:scale(1.18);box-shadow:0 0 0 8px rgba(212,245,100,0);}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(212,245,100,0);}
+}
+.kf-flash{animation:kf-pop .38s var(--ease-snap);}
+@keyframes kf-ring-pop{
+  0%{opacity:.9;transform:translate(-50%,-50%) scale(.3);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);}
+}
+.kf-ring{
+  position:absolute;top:50%;left:50%;width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--accent);pointer-events:none;z-index:40;
+  animation:kf-ring-pop .5s var(--ease) forwards;
+}
+
 /* ---------- Timeline toolbar ---------- */
 .tl-toolbar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--border-soft);background:linear-gradient(180deg,#15171f,var(--bg-panel));flex-shrink:0;flex-wrap:wrap;}
 .tl-toolbar .btn{padding:7px 14px;font-size:11.5px;background:var(--bg-elevated);border-color:var(--border-soft);}
+.history-group{display:flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-soft);border-radius:var(--radius-pill);padding:3px;}
+.history-group button{
+  width:28px;height:28px;border-radius:50%;background:transparent;border:none;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease);flex-shrink:0;
+}
+.history-group button:hover:not(:disabled){background:var(--bg-elevated-2);color:var(--text);}
+.history-group button:disabled{opacity:.3;cursor:not-allowed;}
+.history-group button svg{width:15px;height:15px;}
 .format-group{display:flex;align-items:center;gap:7px;background:var(--bg-elevated);border:1px solid var(--border-soft);padding:5px 6px 5px 14px;border-radius:var(--radius-pill);transition:border-color .15s;}
 .format-group:hover{border-color:var(--text-faint);}
 .format-group select{background:transparent;border:none;color:var(--text);padding:4px 4px;border-radius:var(--radius-s);font-size:11.5px;}
@@ -402,6 +455,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 @keyframes banner-in{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
 .restore-banner button{background:none;border:none;color:var(--text-faint);font-size:16px;padding:0;flex-shrink:0;}
 
+.toast-stack{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:45;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+.toast{
+  background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:var(--radius-pill);
+  font-size:11.5px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:banner-in .22s var(--ease) both, toast-out .22s var(--ease) 1.6s forwards;
+}
+@keyframes toast-out{to{opacity:0;transform:translate(0,8px);}}
+
 /* ---------- Kontextmenü (Rechtsklick) ---------- */
 .context-menu{
   position:fixed;background:var(--bg-elevated);border:1px solid var(--border);
@@ -444,6 +504,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   .icon-btn,.blk-top-btn{padding:5px 6px;font-size:12px;}
   .blk-handle{width:13px;}
   .kf-bar{padding:7px 12px;}
+  .history-group{order:5;}
 }
 @media (max-width:480px){
   #timeTotal,.timecode-sep{display:none;}
@@ -531,7 +592,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </button>
       <div class="rail-spacer"></div>
     </nav>
-    <aside class="panel media-panel">
+    <aside class="panel media-panel" id="mediaPanel">
       <div id="secVideo">
         <div class="panel-head">🎬 Video-Clips</div>
         <div class="add-row">
@@ -558,6 +619,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="list-scroll" id="overlayList"></div>
       </div>
+      <div class="panel-resize-handle" id="mediaResizeHandle"></div>
     </aside>
 
     <section class="stage">
@@ -578,11 +640,20 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="spacer"></div>
         <button class="transport-btn" id="btnPlay">▶</button>
         <button class="transport-btn accent" id="btnSplit" title="An Wiedergabeposition schneiden">✂</button>
+        <button class="transport-btn" id="btnKeyframeTop" title="Keyframe an Wiedergabeposition setzen (K)">◆</button>
         <div class="spacer"></div>
         <div class="volume-group"><span class="mini-label">🔊</span><input type="range" id="volumeRange" min="0" max="100" value="100"></div>
       </div>
       <div class="kf-bar" id="kfBar"></div>
       <div class="tl-toolbar">
+        <div class="history-group">
+          <button id="btnUndo" title="Rückgängig (Ctrl+Z)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          </button>
+          <button id="btnRedo" title="Wiederholen (Ctrl+Y)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+          </button>
+        </div>
         <button class="btn" id="btnDuplicate">⧉ Duplizieren</button>
         <div class="format-group">
           <span class="mini-label">Format</span>
@@ -611,7 +682,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="timeline-scroll" id="timelineScroll">
           <div class="timeline-inner" id="timelineInner">
             <div class="timeline-ruler" id="timelineRuler"></div>
-            <div class="track-row video-row" id="videoTrack"><div class="track-empty-msg" id="videoEmptyMsg">Füge links ein Video hinzu</div></div>
+            <div class="track-row video-row" id="videoTrack"><div class="track-empty-msg" id="videoEmptyMsg">Füge links ein Video hinzu, oder ziehe eine Datei hierher</div></div>
             <div class="track-row audio-row" id="audioTrack"></div>
             <div class="track-row overlay-row" id="overlayTrack"></div>
             <div class="playhead" id="playheadEl" style="left:0"></div>
@@ -620,7 +691,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </div>
     </section>
 
-    <aside class="panel inspector-panel">
+    <aside class="panel inspector-panel" id="inspectorPanel">
+      <div class="panel-resize-handle" id="inspectorResizeHandle"></div>
       <div class="tabs">
         <button class="tab active" data-tab="effects">✨ Effekte</button>
         <button class="tab" data-tab="transition">🔀 Übergang</button>
@@ -644,6 +716,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 </div>
 
 <div id="hiddenVideos" style="position:fixed;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;"></div>
+<div class="toast-stack" id="toastStack"></div>
 
 <div class="modal hidden" id="reportModal">
   <div class="modal-box">
@@ -709,6 +782,8 @@ const EFFECT_PROPS = [
   {key:'sepia',      label:'Sepia',         min:0,   max:100, step:1,   unit:'%',  def:0},
   {key:'vignette',   label:'Vignette',      min:0,   max:100, step:1,   unit:'%',  def:0},
   {key:'temperature',label:'Farbtemperatur',min:-100,max:100, step:1,   unit:'',   def:0},
+  {key:'noise',      label:'Filmkorn',      min:0,   max:100, step:1,   unit:'%',  def:0},
+  {key:'duotone',    label:'Duotone-Stärke',min:0,   max:100, step:1,   unit:'%',  def:0},
   {key:'opacity',    label:'Deckkraft',     min:0,   max:100, step:1,   unit:'%',  def:100},
   {key:'scale',      label:'Größe / Zoom',  min:20,  max:300, step:1,   unit:'%',  def:100},
   {key:'posX',       label:'Position X',    min:-50, max:50,  step:1,   unit:'%',  def:0},
@@ -734,10 +809,17 @@ const TRANSITION_TYPES = [
   ['none','Kein Übergang (harter Schnitt)'],
   ['dissolve','Überblenden'],
   ['fadeblack','Über Schwarz'],
+  ['fadewhite','Über Weiß'],
   ['wipe-left','Wischen (nach links)'],
   ['wipe-right','Wischen (nach rechts)'],
+  ['wipe-up','Wischen (nach oben)'],
+  ['wipe-down','Wischen (nach unten)'],
   ['slide-left','Schieben (nach links)'],
   ['slide-right','Schieben (nach rechts)'],
+  ['zoom-in','Zoom (hinein)'],
+  ['zoom-out','Zoom (heraus)'],
+  ['whip-pan','Whip-Pan (schneller Schwenk)'],
+  ['blur-dissolve','Weichzeichner-Überblendung'],
 ];
 const ASPECT_PRESETS = {
   '16:9':[1280,720], '9:16':[720,1280], '1:1':[1080,1080], '4:5':[1080,1350], '4:3':[1024,768], '21:9':[1512,648]
@@ -745,16 +827,21 @@ const ASPECT_PRESETS = {
 const FILTER_PRESETS = {
   'Zurücksetzen': {},
   'Schwarz/Weiß': {grayscale:100, contrast:112},
-  'Vintage': {sepia:55, contrast:108, saturation:78, vignette:35, temperature:15},
+  'Vintage': {sepia:55, contrast:108, saturation:78, vignette:35, temperature:15, noise:12},
   'Knallig': {saturation:150, contrast:118},
   'Kühl': {temperature:-35, saturation:105},
   'Warm': {temperature:35, saturation:105},
-  'Filmisch': {contrast:112, vignette:25, saturation:92, temperature:8},
+  'Filmisch': {contrast:112, vignette:25, saturation:92, temperature:8, noise:8},
+  'Filmkorn': {noise:35, contrast:106, vignette:15},
+  'Duotone': {duotone:70, contrast:110, saturation:20},
+  'Bleach Bypass': {saturation:35, contrast:135, vignette:20},
 };
 const MAX_EMBED_BYTES = 20*1024*1024;
 const MAX_AUDIO_EMBED_BYTES = 10*1024*1024;
 const MAX_IMG_EMBED_BYTES = 6*1024*1024;
 const AUTOSAVE_KEY = 'vidra_project_v4';
+const HISTORY_LIMIT = 20;
+const PANEL_W_KEY = 'vidra_panel_widths';
 let PX_PER_SEC = 60;
 
 /* ===================== Zustand ===================== */
@@ -783,6 +870,7 @@ let autosaveTimer=null;
 let hasStorageApi = (typeof window.storage !== 'undefined');
 let overlayImgCache = {};
 let activeStickerCat = Object.keys(STICKER_CATS)[0];
+let noisePatternCanvas=null;
 
 /* ===================== Hilfsfunktionen ===================== */
 function uid(){ return 'c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
@@ -850,6 +938,140 @@ function roundRectPath(c, x, y, w, h, r){
   c.arcTo(x, y, x+r, y, r);
   c.closePath();
 }
+function toast(msg){
+  const stack = document.getElementById('toastStack');
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  stack.appendChild(t);
+  setTimeout(()=>t.remove(), 1900);
+}
+function getNoisePattern(){
+  if(noisePatternCanvas) return noisePatternCanvas;
+  const c = document.createElement('canvas'); c.width=128; c.height=128;
+  const cx = c.getContext('2d');
+  const imgData = cx.createImageData(128,128);
+  for(let i=0;i<imgData.data.length;i+=4){
+    const v = Math.random()*255;
+    imgData.data[i]=v; imgData.data[i+1]=v; imgData.data[i+2]=v; imgData.data[i+3]=255;
+  }
+  cx.putImageData(imgData,0,0);
+  noisePatternCanvas = c;
+  return c;
+}
+
+/* ===================== Undo/Redo (Snapshot-Historie) ===================== */
+let undoStack = [];
+let redoStack = [];
+let restoringHistory = false;
+let historyDebounceTimer = null;
+
+function cloneEffects(e){ return Object.assign({}, e); }
+function cloneKfs(list){ return (list||[]).map(k=>({t:k.t, v:{...k.v}})); }
+function snapshotState(){
+  return {
+    projectName: state.projectName,
+    canvasAspect: state.canvasAspect,
+    selection: {...state.selection},
+    clips: state.clips.map(c=>({
+      id:c.id, name:c.name, duration:c.duration, trimIn:c.trimIn, trimOut:c.trimOut,
+      effects:cloneEffects(c.effects), keyframes:cloneKfs(c.keyframes),
+      text:{...c.text}, flipH:c.flipH, transitionOut:{...c.transitionOut},
+      needsRelink:c.needsRelink, thumb:c.thumb, fileSizeHint:c.fileSizeHint||null,
+      _refUid: c._refUid,
+    })),
+    audioClips: state.audioClips.map(a=>({
+      id:a.id, name:a.name, duration:a.duration, trimIn:a.trimIn, trimOut:a.trimOut,
+      startTime:a.startTime, volume:a.volume, fadeIn:a.fadeIn, fadeOut:a.fadeOut,
+      needsRelink:a.needsRelink, _refUid:a._refUid,
+    })),
+    overlays: state.overlays.map(o=>({...o, keyframes:cloneKfs(o.keyframes)})),
+  };
+}
+function applySnapshot(snap){
+  restoringHistory = true;
+  state.projectName = snap.projectName;
+  document.getElementById('projectName').value = snap.projectName;
+  if(snap.canvasAspect !== state.canvasAspect) setCanvasAspect(snap.canvasAspect);
+
+  // Video-Clips: bestehende Elemente wiederverwenden, wenn möglich (per id), sonst neu referenzieren
+  const oldById = {}; state.clips.forEach(c=>oldById[c.id]=c);
+  state.clips = snap.clips.map(sc=>{
+    const existing = oldById[sc.id];
+    if(existing){
+      Object.assign(existing, {
+        name:sc.name, duration:sc.duration, trimIn:sc.trimIn, trimOut:sc.trimOut,
+        effects:cloneEffects(sc.effects), keyframes:cloneKfs(sc.keyframes),
+        text:{...sc.text}, flipH:sc.flipH, transitionOut:{...sc.transitionOut},
+      });
+      return existing;
+    }
+    // Clip wurde gelöscht und jetzt wiederhergestellt – ohne Originaldatei nicht rekonstruierbar
+    return createPlaceholderClip({...sc, fileSize:sc.fileSizeHint});
+  });
+
+  const oldAudioById = {}; state.audioClips.forEach(a=>oldAudioById[a.id]=a);
+  state.audioClips = snap.audioClips.map(sa=>{
+    const existing = oldAudioById[sa.id];
+    if(existing){
+      Object.assign(existing, {name:sa.name, duration:sa.duration, trimIn:sa.trimIn, trimOut:sa.trimOut,
+        startTime:sa.startTime, volume:sa.volume, fadeIn:sa.fadeIn, fadeOut:sa.fadeOut});
+      return existing;
+    }
+    return {id:sa.id, name:sa.name, sourceFile:null, url:null, audioEl:null, duration:sa.duration,
+      trimIn:sa.trimIn, trimOut:sa.trimOut, startTime:sa.startTime, volume:sa.volume,
+      fadeIn:sa.fadeIn||0, fadeOut:sa.fadeOut||0, gainNode:null, connected:false, needsRelink:true};
+  });
+
+  const oldOverlayById = {}; state.overlays.forEach(o=>oldOverlayById[o.id]=o);
+  state.overlays = snap.overlays.map(so=>{
+    const existing = oldOverlayById[so.id];
+    if(existing){ Object.assign(existing, so, {keyframes:cloneKfs(so.keyframes)}); return existing; }
+    const merged = Object.assign(makeOverlayDefaults(so.kind), so, {keyframes:cloneKfs(so.keyframes)});
+    return merged;
+  });
+
+  state.selection = {...snap.selection};
+  restoringHistory = false;
+  renderAll(); queueAutosave();
+}
+function pushHistory(){
+  if(restoringHistory) return;
+  undoStack.push(snapshotState());
+  if(undoStack.length>HISTORY_LIMIT) undoStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
+}
+function queueHistory(){
+  // Für schnelle, wiederholte Änderungen (Slider ziehen) wird die Historie gebündelt.
+  clearTimeout(historyDebounceTimer);
+  historyDebounceTimer = setTimeout(pushHistory, 350);
+}
+function performUndo(){
+  if(undoStack.length===0) return;
+  const current = snapshotState();
+  const prev = undoStack.pop();
+  redoStack.push(current);
+  if(redoStack.length>HISTORY_LIMIT) redoStack.shift();
+  applySnapshot(prev);
+  updateHistoryButtons();
+  toast('Rückgängig gemacht');
+}
+function performRedo(){
+  if(redoStack.length===0) return;
+  const current = snapshotState();
+  const next = redoStack.pop();
+  undoStack.push(current);
+  if(undoStack.length>HISTORY_LIMIT) undoStack.shift();
+  applySnapshot(next);
+  updateHistoryButtons();
+  toast('Wiederholt');
+}
+function updateHistoryButtons(){
+  document.getElementById('btnUndo').disabled = undoStack.length===0;
+  document.getElementById('btnRedo').disabled = redoStack.length===0;
+}
+document.getElementById('btnUndo').addEventListener('click', performUndo);
+document.getElementById('btnRedo').addEventListener('click', performRedo);
 
 /* ===================== Video-Clip-Modell ===================== */
 function createClipFromFile(file, restoreData){
@@ -1013,23 +1235,45 @@ function upsertObjectKeyframe(target, t, patch, baseGetter){
 function setVideoProps(clip, patch){
   if(!clip.keyframes || clip.keyframes.length===0){ Object.assign(clip.effects, patch); queueAutosave(); }
   else{ const t=localTimeForClipAtPlayhead(clip); upsertObjectKeyframe(clip, t, patch, ()=>computeEffectValues(clip, t)); }
+  queueHistory();
 }
 function setOverlayProps(o, patch){
   if(!o.keyframes || o.keyframes.length===0){ Object.assign(o, patch); queueAutosave(); }
   else{ const t=localTimeForOverlay(o); upsertObjectKeyframe(o, t, patch, ()=>computeOverlayEffective(o, t)); }
+  queueHistory();
+}
+function flashKeyframeFeedback(){
+  // Puls auf der Keyframe-Leiste + kleiner Ring am Playhead im Track
+  const bar = document.getElementById('kfBar');
+  bar.classList.remove('kf-flash'); void bar.offsetWidth; bar.classList.add('kf-flash');
+  const addBtn = bar.querySelector('.kf-add');
+  if(addBtn){ addBtn.classList.remove('kf-flash'); void addBtn.offsetWidth; addBtn.classList.add('kf-flash'); }
+  const topBtn = document.getElementById('btnKeyframeTop');
+  topBtn.classList.remove('kf-flash'); void topBtn.offsetWidth; topBtn.classList.add('kf-flash');
+  const ring = document.createElement('div');
+  ring.className='kf-ring';
+  topBtn.style.position = topBtn.style.position || 'relative';
+  topBtn.appendChild(ring);
+  setTimeout(()=>ring.remove(), 520);
+  toast('◆ Keyframe gesetzt');
 }
 function addKeyframeNow(){
+  let added=false;
   if(state.selection.type==='video'){
     const clip=selectedClip(); if(!clip||clip.needsRelink) return;
     const t=localTimeForClipAtPlayhead(clip);
     upsertObjectKeyframe(clip, t, {}, ()=>computeEffectValues(clip, t));
+    added=true;
   } else if(state.selection.type==='overlay'){
     const o=selectedOverlay(); if(!o) return;
     if(state.playheadTime<o.start || state.playheadTime>o.end) return;
     const t=localTimeForOverlay(o);
     upsertObjectKeyframe(o, t, {}, ()=>computeOverlayEffective(o, t));
+    added=true;
   } else return;
+  pushHistory();
   renderAll();
+  if(added) flashKeyframeFeedback();
 }
 function removeKeyframeNow(){
   if(state.selection.type==='video'){
@@ -1043,9 +1287,10 @@ function removeKeyframeNow(){
     const idx=o.keyframes.findIndex(k=>Math.abs(k.t-t)<0.08);
     if(idx>=0) o.keyframes.splice(idx,1);
   } else return;
-  queueAutosave(); renderAll();
+  queueAutosave(); pushHistory(); renderAll();
 }
 function toggleKeyframeAtPlayhead(){
+  let didAdd=false;
   if(state.selection.type==='video'){
     const clip=selectedClip(); if(!clip||clip.needsRelink) return;
     const t=localTimeForClipAtPlayhead(clip);
@@ -1054,6 +1299,7 @@ function toggleKeyframeAtPlayhead(){
       clip.keyframes.splice(clip.keyframes.indexOf(existing),1);
     } else {
       upsertObjectKeyframe(clip, t, {}, ()=>computeEffectValues(clip, t));
+      didAdd=true;
     }
   } else if(state.selection.type==='overlay'){
     const o=selectedOverlay(); if(!o) return;
@@ -1064,22 +1310,24 @@ function toggleKeyframeAtPlayhead(){
       o.keyframes.splice(o.keyframes.indexOf(existing),1);
     } else {
       upsertObjectKeyframe(o, t, {}, ()=>computeOverlayEffective(o, t));
+      didAdd=true;
     }
   } else return;
-  queueAutosave(); renderAll();
+  queueAutosave(); pushHistory(); renderAll();
+  if(didAdd) flashKeyframeFeedback();
 }
 function clearAllKeyframesVideo(clip){
   const t=localTimeForClipAtPlayhead(clip);
   clip.effects = computeEffectValues(clip, t);
   clip.keyframes=[];
-  queueAutosave();
+  queueAutosave(); pushHistory();
 }
 function clearAllKeyframesOverlay(o){
   const t=localTimeForOverlay(o);
   const vals=computeOverlayEffective(o,t);
   Object.assign(o, vals);
   o.keyframes=[];
-  queueAutosave();
+  queueAutosave(); pushHistory();
 }
 function currentFrameContext(){
   if(state.selection.type==='video'){
@@ -1135,7 +1383,7 @@ function splitClipAtPlayhead(){
   const idx = state.clips.indexOf(clip);
   state.clips.splice(idx+1,0,clone);
   state.selection = {type:'video', id: clone.id};
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
 function duplicateSelectedVideoClip(){
   const clip = selectedClip();
@@ -1151,7 +1399,7 @@ function duplicateSelectedVideoClip(){
   const idx = state.clips.indexOf(clip);
   state.clips.splice(idx+1,0,dup);
   state.selection = {type:'video', id: dup.id};
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
 
 /* ===================== Canvas-Format ===================== */
@@ -1169,9 +1417,8 @@ const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 let bufCanvasA=null, bufCanvasB=null;
 
-// Hintergrundfarbe im Editor (helleres Grau) – beim Export schwarz
-const EDITOR_BG = '#2c313d';
-function getBgColor(){ return state.isExporting ? '#000' : EDITOR_BG; }
+// Hintergrund innerhalb des Canvas (Letterbox-Balken) ist immer schwarz, wie beim fertigen Export.
+function getBgColor(){ return '#000'; }
 
 function getBuf(name){
   let c = name==='A'?bufCanvasA:bufCanvasB;
@@ -1243,8 +1490,11 @@ function renderSingleClip(clip, localTime){
   drawClipToCanvas(clip, vals, ctx);
 }
 
-function renderTransitionFrame(clipA, localA, clipB, localB, transType, p){
+function easeInOutCubic(p){ return p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2; }
+
+function renderTransitionFrame(clipA, localA, clipB, localB, transType, pRaw){
   const W=canvas.width, H=canvas.height;
+  const p = clamp(pRaw,0,1);
   const bufA = getBuf('A'), bufB = getBuf('B');
   const bctxA = bufA.getContext('2d'), bctxB = bufB.getContext('2d');
   if(!clipA.needsRelink && clipA.videoEl){
@@ -1261,6 +1511,11 @@ function renderTransitionFrame(clipA, localA, clipB, localB, transType, p){
       if(p<0.5){ ctx.globalAlpha=1-(p/0.5); ctx.drawImage(bufA,0,0); }
       else { ctx.globalAlpha=(p-0.5)/0.5; ctx.drawImage(bufB,0,0); }
       break;
+    case 'fadewhite':
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+      if(p<0.5){ ctx.globalAlpha=1; ctx.drawImage(bufA,0,0); ctx.globalAlpha=(p/0.5); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); }
+      else { ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1-((p-0.5)/0.5); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H); ctx.globalAlpha=(p-0.5)/0.5; ctx.drawImage(bufB,0,0); }
+      break;
     case 'wipe-left':
       ctx.globalAlpha=1; ctx.drawImage(bufA,0,0);
       ctx.save(); ctx.beginPath(); ctx.rect(W*(1-p),0,W*p,H); ctx.clip(); ctx.drawImage(bufB,0,0); ctx.restore();
@@ -1268,6 +1523,14 @@ function renderTransitionFrame(clipA, localA, clipB, localB, transType, p){
     case 'wipe-right':
       ctx.globalAlpha=1; ctx.drawImage(bufA,0,0);
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,W*p,H); ctx.clip(); ctx.drawImage(bufB,0,0); ctx.restore();
+      break;
+    case 'wipe-up':
+      ctx.globalAlpha=1; ctx.drawImage(bufA,0,0);
+      ctx.save(); ctx.beginPath(); ctx.rect(0,H*(1-p),W,H*p); ctx.clip(); ctx.drawImage(bufB,0,0); ctx.restore();
+      break;
+    case 'wipe-down':
+      ctx.globalAlpha=1; ctx.drawImage(bufA,0,0);
+      ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H*p); ctx.clip(); ctx.drawImage(bufB,0,0); ctx.restore();
       break;
     case 'slide-left':
       ctx.globalAlpha=1; ctx.drawImage(bufA,-p*W,0);
@@ -1277,6 +1540,41 @@ function renderTransitionFrame(clipA, localA, clipB, localB, transType, p){
       ctx.globalAlpha=1; ctx.drawImage(bufA,p*W,0);
       ctx.drawImage(bufB, -W*(1-p),0);
       break;
+    case 'zoom-in': {
+      const pe = easeInOutCubic(p);
+      ctx.globalAlpha=1-pe; ctx.drawImage(bufA,0,0);
+      const s = 1+pe*0.35;
+      ctx.globalAlpha=pe;
+      ctx.save(); ctx.translate(W/2,H/2); ctx.scale(s,s); ctx.drawImage(bufB,-W/2,-H/2); ctx.restore();
+      break;
+    }
+    case 'zoom-out': {
+      const pe = easeInOutCubic(p);
+      const sA = 1+pe*0.35;
+      ctx.save(); ctx.globalAlpha=1-pe; ctx.translate(W/2,H/2); ctx.scale(sA,sA); ctx.drawImage(bufA,-W/2,-H/2); ctx.restore();
+      ctx.globalAlpha=pe; ctx.drawImage(bufB,0,0);
+      break;
+    }
+    case 'whip-pan': {
+      const pe = p<0.5 ? easeInOutCubic(p/0.5) : easeInOutCubic((p-0.5)/0.5);
+      if(p<0.5){
+        ctx.filter = `blur(${(pe*22)}px)`;
+        ctx.drawImage(bufA, -pe*W*0.9, 0);
+      } else {
+        ctx.filter = `blur(${((1-pe)*22)}px)`;
+        ctx.drawImage(bufB, W*0.9*(1-pe), 0);
+      }
+      ctx.filter='none';
+      break;
+    }
+    case 'blur-dissolve': {
+      const blurAmt = Math.sin(p*Math.PI)*14;
+      ctx.filter = `blur(${blurAmt}px)`;
+      ctx.globalAlpha=1-p; ctx.drawImage(bufA,0,0);
+      ctx.globalAlpha=p; ctx.drawImage(bufB,0,0);
+      ctx.filter='none';
+      break;
+    }
     default:
       ctx.globalAlpha=1; ctx.drawImage(bufA,0,0);
       ctx.globalAlpha=p; ctx.drawImage(bufB,0,0);
@@ -1312,6 +1610,24 @@ function drawClipToCanvas(clip, vals, targetCtx){
     targetCtx.globalCompositeOperation='overlay';
     targetCtx.globalAlpha = Math.min(Math.abs(vals.temperature)/100,1)*0.5;
     targetCtx.fillStyle = vals.temperature>0 ? '#ff9c40' : '#40a0ff';
+    targetCtx.fillRect(0,0,W,H);
+    targetCtx.restore();
+  }
+  if(vals.duotone && vals.duotone>0){
+    targetCtx.save();
+    targetCtx.globalCompositeOperation='color';
+    targetCtx.globalAlpha = clamp(vals.duotone/100,0,1);
+    const g2 = targetCtx.createLinearGradient(0,0,W,H);
+    g2.addColorStop(0,'#3a2fd6'); g2.addColorStop(1,'#ff6d5a');
+    targetCtx.fillStyle=g2; targetCtx.fillRect(0,0,W,H);
+    targetCtx.restore();
+  }
+  if(vals.noise && vals.noise>0){
+    targetCtx.save();
+    const pat = targetCtx.createPattern(getNoisePattern(),'repeat');
+    targetCtx.globalAlpha = clamp(vals.noise/100,0,1)*0.35;
+    targetCtx.globalCompositeOperation='overlay';
+    targetCtx.fillStyle = pat;
     targetCtx.fillRect(0,0,W,H);
     targetCtx.restore();
   }
@@ -1653,13 +1969,14 @@ function tick(){
 
 document.getElementById('btnPlay').addEventListener('click', togglePlay);
 document.getElementById('btnSplit').addEventListener('click', splitClipAtPlayhead);
+document.getElementById('btnKeyframeTop').addEventListener('click', addKeyframeNow);
 document.getElementById('btnDuplicate').addEventListener('click', duplicateSelectedVideoClip);
 document.getElementById('volumeRange').addEventListener('input', e=>{
   const v = e.target.value/100;
   state.clips.forEach(c=>{ if(c.gainNode) c.gainNode.gain.value=v; });
   state.audioClips.forEach(a=>{ if(a.gainNode) a.gainNode.gain.value = v*(a.volume/100); });
 });
-document.getElementById('aspectSelect').addEventListener('change', e=> setCanvasAspect(e.target.value));
+document.getElementById('aspectSelect').addEventListener('change', e=>{ setCanvasAspect(e.target.value); pushHistory(); });
 
 /* ===================== Tastenkürzel ===================== */
 window.addEventListener('keydown', e=>{
@@ -1668,7 +1985,11 @@ window.addEventListener('keydown', e=>{
     return;
   }
   const tag = document.activeElement ? document.activeElement.tagName : '';
-  if(['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
+  const isEditable = ['INPUT','TEXTAREA','SELECT'].includes(tag);
+  const mod = e.ctrlKey || e.metaKey;
+  if(mod && (e.key==='z'||e.key==='Z') && !e.shiftKey){ e.preventDefault(); performUndo(); return; }
+  if(mod && ((e.key==='y'||e.key==='Y') || (e.shiftKey && (e.key==='z'||e.key==='Z')))){ e.preventDefault(); performRedo(); return; }
+  if(isEditable) return;
   if(e.code==='Space'){ e.preventDefault(); togglePlay(); return; }
   if(e.key==='Delete' || e.key==='Backspace'){
     if(state.selection.type==='video') removeClip(state.selection.id);
@@ -1779,15 +2100,18 @@ document.addEventListener('contextmenu', (e)=>{
 });
 
 /* ===================== Medien hinzufügen / entfernen (Video) ===================== */
-document.getElementById('mediaInput').addEventListener('change', e=>{
-  const files = Array.from(e.target.files||[]);
+function addVideoFiles(files){
   files.forEach(file=>{
+    if(!file.type.startsWith('video/')) return;
     const clip = createClipFromFile(file);
     state.clips.push(clip);
     if(!state.selection.type) state.selection = {type:'video', id:clip.id};
   });
+  renderAll(); queueAutosave(); pushHistory();
+}
+document.getElementById('mediaInput').addEventListener('change', e=>{
+  addVideoFiles(Array.from(e.target.files||[]));
   e.target.value='';
-  renderAll(); queueAutosave();
 });
 function urlStillUsedByOtherClip(clip){ return state.clips.some(c=>c!==clip && c.url===clip.url); }
 function removeClip(id){
@@ -1801,14 +2125,14 @@ function removeClip(id){
     state.selection = state.clips.length? {type:'video', id:state.clips[0].id} : {type:null,id:null};
   }
   seekTo(Math.min(state.playheadTime, timelineLength()));
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
 function moveClip(id, dir){
   const idx = state.clips.findIndex(c=>c.id===id);
   const j = idx+dir;
   if(idx<0||j<0||j>=state.clips.length) return;
   const tmp = state.clips[idx]; state.clips[idx]=state.clips[j]; state.clips[j]=tmp;
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
 function relinkClip(id, file){
   const idx = state.clips.findIndex(c=>c.id===id);
@@ -1826,9 +2150,9 @@ function selectedAudio(){ return state.selection.type==='audio' ? state.audioCli
 function selectedOverlay(){ return state.selection.type==='overlay' ? state.overlays.find(o=>o.id===state.selection.id) : null; }
 
 /* ===================== Ton-Clips ===================== */
-document.getElementById('audioInput').addEventListener('change', e=>{
-  const files = Array.from(e.target.files||[]);
+function addAudioFiles(files){
   files.forEach(file=>{
+    if(!file.type.startsWith('audio/')) return;
     const url = URL.createObjectURL(file);
     const el = document.createElement('audio');
     el.src=url; el.preload='auto'; el.crossOrigin='anonymous';
@@ -1839,8 +2163,11 @@ document.getElementById('audioInput').addEventListener('change', e=>{
     state.audioClips.push(a);
     state.selection = {type:'audio', id:a.id};
   });
+  renderAll(); queueAutosave(); pushHistory();
+}
+document.getElementById('audioInput').addEventListener('change', e=>{
+  addAudioFiles(Array.from(e.target.files||[]));
   e.target.value='';
-  renderAll(); queueAutosave();
 });
 function removeAudioClip(id){
   const idx = state.audioClips.findIndex(a=>a.id===id);
@@ -1850,7 +2177,7 @@ function removeAudioClip(id){
   if(a.url) URL.revokeObjectURL(a.url);
   state.audioClips.splice(idx,1);
   if(state.selection.type==='audio' && state.selection.id===id) state.selection={type:null,id:null};
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
 function relinkAudioClip(id, file){
   const idx = state.audioClips.findIndex(a=>a.id===id);
@@ -1889,12 +2216,10 @@ document.getElementById('btnAddText').addEventListener('click', ()=>{
   const o = makeOverlayDefaults('text'); o.start=t; o.end=t+3;
   state.overlays.push(o);
   state.selection={type:'overlay', id:o.id};
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 });
-document.getElementById('stickerImgInput').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  e.target.value='';
-  if(!file) return;
+function addImageStickerFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
   const url = URL.createObjectURL(file);
   const img = createOverlayImageEl(url);
   img.onload = ()=>{
@@ -1906,8 +2231,13 @@ document.getElementById('stickerImgInput').addEventListener('change', e=>{
     overlayImgCache[o.id]=img;
     state.overlays.push(o);
     state.selection={type:'overlay', id:o.id};
-    renderAll(); queueAutosave();
+    renderAll(); queueAutosave(); pushHistory();
   };
+}
+document.getElementById('stickerImgInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  e.target.value='';
+  addImageStickerFile(file);
 });
 function buildStickerUI(){
   const catRow = document.getElementById('stickerCatRow');
@@ -1929,7 +2259,7 @@ function buildStickerUI(){
       const o = makeOverlayDefaults('sticker'); o.start=t; o.end=t+3; o.content=em;
       state.overlays.push(o);
       state.selection={type:'overlay', id:o.id};
-      renderAll(); queueAutosave();
+      renderAll(); queueAutosave(); pushHistory();
     });
     grid.appendChild(b);
   });
@@ -1943,15 +2273,101 @@ function removeOverlay(id){
   if(cachedImg){ cachedImg.remove(); delete overlayImgCache[id]; }
   state.overlays.splice(idx,1);
   if(state.selection.type==='overlay' && state.selection.id===id) state.selection={type:null,id:null};
-  renderAll(); queueAutosave();
+  renderAll(); queueAutosave(); pushHistory();
 }
+
+/* ===================== Drag & Drop für Mediendateien ===================== */
+function setupDropzone(el, {accept, overlayIcon, overlayText, onFiles}){
+  let dragDepth = 0;
+  let overlayEl = null;
+  function showOverlay(){
+    if(overlayEl) return;
+    overlayEl = document.createElement('div');
+    overlayEl.className='drop-overlay';
+    overlayEl.innerHTML = `<div class="doi">${overlayIcon}</div><div>${overlayText}</div>`;
+    el.appendChild(overlayEl);
+    el.classList.add('dropzone-active');
+  }
+  function hideOverlay(){
+    if(overlayEl){ overlayEl.remove(); overlayEl=null; }
+    el.classList.remove('dropzone-active');
+    dragDepth=0;
+  }
+  function hasMatchingFile(dt){
+    if(!dt || !dt.types) return false;
+    return Array.from(dt.types).includes('Files');
+  }
+  el.addEventListener('dragenter', e=>{
+    if(!hasMatchingFile(e.dataTransfer)) return;
+    e.preventDefault(); dragDepth++; showOverlay();
+  });
+  el.addEventListener('dragover', e=>{
+    if(!hasMatchingFile(e.dataTransfer)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect='copy';
+  });
+  el.addEventListener('dragleave', e=>{
+    if(!hasMatchingFile(e.dataTransfer)) return;
+    dragDepth--; if(dragDepth<=0) hideOverlay();
+  });
+  el.addEventListener('drop', e=>{
+    if(!hasMatchingFile(e.dataTransfer)) return;
+    e.preventDefault(); hideOverlay();
+    const files = Array.from(e.dataTransfer.files||[]).filter(f=>accept(f));
+    if(files.length===0){ toast('Keine passende Datei erkannt'); return; }
+    onFiles(files);
+  });
+}
+setupDropzone(document.getElementById('secVideo'), {
+  accept:f=>f.type.startsWith('video/'), overlayIcon:'🎬', overlayText:'Video hier ablegen',
+  onFiles:addVideoFiles,
+});
+setupDropzone(document.getElementById('videoTrack'), {
+  accept:f=>f.type.startsWith('video/'), overlayIcon:'🎬', overlayText:'Video hier ablegen',
+  onFiles:addVideoFiles,
+});
+setupDropzone(document.getElementById('secAudio'), {
+  accept:f=>f.type.startsWith('audio/'), overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
+  onFiles:addAudioFiles,
+});
+setupDropzone(document.getElementById('audioTrack'), {
+  accept:f=>f.type.startsWith('audio/'), overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
+  onFiles:addAudioFiles,
+});
+setupDropzone(document.getElementById('secOverlay'), {
+  accept:f=>f.type.startsWith('image/'), overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
+  onFiles:files=>files.forEach(addImageStickerFile),
+});
+setupDropzone(document.getElementById('overlayTrack'), {
+  accept:f=>f.type.startsWith('image/'), overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
+  onFiles:files=>files.forEach(addImageStickerFile),
+});
+// Canvas selbst akzeptiert alle drei Medientypen und sortiert sie automatisch ein.
+setupDropzone(document.getElementById('canvasWrap'), {
+  accept:f=> f.type.startsWith('video/')||f.type.startsWith('audio/')||f.type.startsWith('image/'),
+  overlayIcon:'⬇️', overlayText:'Video, Ton oder Bild hier ablegen',
+  onFiles:files=>{
+    const vids=files.filter(f=>f.type.startsWith('video/'));
+    const auds=files.filter(f=>f.type.startsWith('audio/'));
+    const imgs=files.filter(f=>f.type.startsWith('image/'));
+    if(vids.length) addVideoFiles(vids);
+    if(auds.length) addAudioFiles(auds);
+    imgs.forEach(addImageStickerFile);
+  },
+});
+// Verhindert, dass versehentlich außerhalb der Dropzonen fallengelassene Dateien den Tab ersetzen.
+['dragover','drop'].forEach(evt=>{
+  window.addEventListener(evt, e=>{
+    if(e.dataTransfer && Array.from(e.dataTransfer.types||[]).includes('Files')) e.preventDefault();
+  });
+});
 
 /* ===================== UI: Video-Medienliste ===================== */
 function renderMediaList(){
   const list = document.getElementById('mediaList');
   list.innerHTML='';
   if(state.clips.length===0){
-    list.innerHTML = '<div class="empty-hint">Noch keine Videos. Füge eine Datei hinzu, um deinen ersten Clip auf die Timeline zu legen.</div>';
+    list.innerHTML = '<div class="empty-hint">Noch keine Videos. Füge eine Datei hinzu oder ziehe sie hierher, um deinen ersten Clip auf die Timeline zu legen.</div>';
     return;
   }
   state.clips.forEach(c=>{
@@ -2008,7 +2424,7 @@ function renderMediaList(){
 function renderAudioList(){
   const list = document.getElementById('audioList');
   list.innerHTML='';
-  if(state.audioClips.length===0){ list.innerHTML='<div class="empty-hint">Noch kein Ton oder Musik hinzugefügt.</div>'; return; }
+  if(state.audioClips.length===0){ list.innerHTML='<div class="empty-hint">Noch kein Ton oder Musik hinzugefügt. Du kannst Dateien auch hierher ziehen.</div>'; return; }
   state.audioClips.forEach(a=>{
     if(a.needsRelink){
       const row = document.createElement('div');
@@ -2051,7 +2467,7 @@ function renderAudioList(){
 function renderOverlayList(){
   const list = document.getElementById('overlayList');
   list.innerHTML='';
-  if(state.overlays.length===0){ list.innerHTML='<div class="empty-hint">Noch keine Text- oder Sticker-Overlays.</div>'; return; }
+  if(state.overlays.length===0){ list.innerHTML='<div class="empty-hint">Noch keine Text- oder Sticker-Overlays. Bilder kannst du auch hierher ziehen.</div>'; return; }
   state.overlays.forEach(o=>{
     const item = document.createElement('div');
     item.className='media-item overlay-type'+(state.selection.type==='overlay'&&o.id===state.selection.id?' selected':'');
@@ -2158,7 +2574,7 @@ function renderAudioTrack(){
   track.querySelectorAll('.blk').forEach(n=>n.remove());
   track.querySelectorAll('.track-empty-msg').forEach(n=>n.remove());
   if(state.audioClips.length===0){
-    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Ton hinzugefügt';
+    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Ton hinzugefügt – Datei hierher ziehen';
     track.appendChild(msg);
   }
   state.audioClips.forEach(a=>{
@@ -2197,7 +2613,7 @@ function renderOverlayTrack(){
   track.querySelectorAll('.blk').forEach(n=>n.remove());
   track.querySelectorAll('.track-empty-msg').forEach(n=>n.remove());
   if(state.overlays.length===0){
-    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Overlay hinzugefügt';
+    const msg=document.createElement('div'); msg.className='track-empty-msg'; msg.textContent='Kein Overlay hinzugefügt – Bild hierher ziehen';
     track.appendChild(msg);
   }
   state.overlays.forEach(o=>{
@@ -2256,7 +2672,7 @@ function setupTrimHandle(handleEl, clip, side){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave();
+      queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2278,7 +2694,7 @@ function setupAudioTrimHandle(handleEl, a, side){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave();
+      queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2300,7 +2716,7 @@ function setupOverlayEdgeHandle(handleEl, o, side){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave();
+      queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2330,7 +2746,7 @@ function setupDragMove(blockEl, item, kind){
       blockEl.releasePointerCapture(e.pointerId);
       blockEl.removeEventListener('pointermove', onMove);
       blockEl.removeEventListener('pointerup', onUp);
-      if(moved) queueAutosave();
+      if(moved){ queueAutosave(); pushHistory(); }
       else selectItem(kind, item.id);
     }
     blockEl.addEventListener('pointermove', onMove);
@@ -2411,7 +2827,7 @@ function startFrameDrag(e, mode){
     try{ selFrame.releasePointerCapture(e.pointerId); }catch(err){}
     selFrame.removeEventListener('pointermove', onMove);
     selFrame.removeEventListener('pointerup', onUp);
-    queueAutosave();
+    queueAutosave(); pushHistory();
   }
   selFrame.addEventListener('pointermove', onMove);
   selFrame.addEventListener('pointerup', onUp);
@@ -2435,12 +2851,16 @@ canvas.addEventListener('pointermove', (e)=>{
   let nx=clamp(dragStartXY.x+dxPct,0,100), ny=clamp(dragStartXY.y+dyPct,0,100);
   setOverlayProps(draggingOverlayOnCanvas, {x:nx, y:ny});
 });
-canvas.addEventListener('pointerup', ()=>{ draggingOverlayOnCanvas=null; });
+canvas.addEventListener('pointerup', ()=>{
+  if(draggingOverlayOnCanvas){ queueAutosave(); pushHistory(); }
+  draggingOverlayOnCanvas=null;
+});
 
 /* ===================== Keyframe-Leiste (unter der Vorschau) ===================== */
 function renderKfBar(){
   const bar = document.getElementById('kfBar');
   let target=null, kind=null, dur=0, curLocal=0, disabledReason=null;
+  const topBtn = document.getElementById('btnKeyframeTop');
   if(state.selection.type==='video'){
     const clip=selectedClip();
     if(clip && !clip.needsRelink){ target=clip; kind='video'; dur=clipDuration(clip); curLocal=localTimeForClipAtPlayhead(clip); }
@@ -2449,6 +2869,7 @@ function renderKfBar(){
     const o=selectedOverlay();
     if(o){ target=o; kind='overlay'; dur=Math.max(0.01,o.end-o.start); curLocal=localTimeForOverlay(o); }
   }
+  topBtn.disabled = !target;
   if(!target){
     bar.innerHTML = `<div class="kf-empty">${disabledReason || 'Wähle ein Video oder Overlay aus, um Größe, Position und Effekte per Keyframe zu animieren.'}</div>`;
     return;
@@ -2509,15 +2930,15 @@ function renderEffectsTab(){
     const d=clipDuration(clip);
     upsertObjectKeyframe(clip,0,{opacity:0},()=>computeEffectValues(clip,0));
     upsertObjectKeyframe(clip,Math.min(1,d),{opacity:100},()=>computeEffectValues(clip,Math.min(1,d)));
-    renderAll();
+    pushHistory(); renderAll();
   });
   quickRow.querySelector('#qFadeOut').addEventListener('click', ()=>{
     const d=clipDuration(clip);
     upsertObjectKeyframe(clip,Math.max(0,d-1),{opacity:100},()=>computeEffectValues(clip,Math.max(0,d-1)));
     upsertObjectKeyframe(clip,d,{opacity:0},()=>computeEffectValues(clip,d));
-    renderAll();
+    pushHistory(); renderAll();
   });
-  quickRow.querySelector('#qFlip').addEventListener('click', ()=>{ clip.flipH=!clip.flipH; renderAll(); queueAutosave(); });
+  quickRow.querySelector('#qFlip').addEventListener('click', ()=>{ clip.flipH=!clip.flipH; queueAutosave(); pushHistory(); renderAll(); });
 
   const secPreset = document.createElement('div');
   secPreset.className='section-title'; secPreset.textContent='Filter-Presets';
@@ -2529,6 +2950,7 @@ function renderEffectsTab(){
     b.addEventListener('click', ()=>{
       const patch = name==='Zurücksetzen' ? defaultEffects() : {...defaultEffects(), ...FILTER_PRESETS[name]};
       setVideoProps(clip, patch);
+      pushHistory();
       renderAll();
     });
     presetRow.appendChild(b);
@@ -2554,7 +2976,7 @@ function renderEffectsTab(){
       setVideoProps(clip, {[p.key]:v});
       renderFrame(); renderKfBar();
     });
-    range.addEventListener('change', ()=>queueAutosave());
+    range.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
     el.appendChild(row);
   });
 }
@@ -2579,14 +3001,14 @@ function renderTransitionTab(){
     <div class="kf-clear-hint" style="font-size:10px;color:var(--text-faint);line-height:1.5;">Die Dauer wird automatisch an die Länge beider beteiligten Clips angepasst, falls sie zu kurz sind. In der Timeline erscheint ein schraffiertes Übergangs-Feld zwischen den Clips.</div>`;
   const sel = el.querySelector('#transType');
   sel.value = clip.transitionOut.type;
-  sel.addEventListener('change', ()=>{ clip.transitionOut.type=sel.value; renderAll(); queueAutosave(); });
+  sel.addEventListener('change', ()=>{ clip.transitionOut.type=sel.value; renderAll(); queueAutosave(); pushHistory(); });
   const dur = el.querySelector('#transDur');
   dur.addEventListener('input', ()=>{
     clip.transitionOut.duration = Number(dur.value);
     el.querySelector('#transDurVal').textContent = Number(dur.value).toFixed(1)+'s';
     renderTimeline(); renderFrame();
   });
-  dur.addEventListener('change', ()=>queueAutosave());
+  dur.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
 }
 
 /* ===================== Inspector: Keyframes (vereinheitlicht) ===================== */
@@ -2595,7 +3017,7 @@ function renderKeyframesTab(){
   let target=null, kind=null;
   if(state.selection.type==='video'){ const c=selectedClip(); if(c && !c.needsRelink){ target=c; kind='video'; } }
   else if(state.selection.type==='overlay'){ target=selectedOverlay(); kind='overlay'; }
-  if(!target){ el.innerHTML='<div class="no-selection">Wähle ein Video oder Overlay aus. Nutze anschließend die Keyframe-Leiste unter der Vorschau, um Größe, Position und Effekte zu animieren.</div>'; return; }
+  if(!target){ el.innerHTML='<div class="no-selection">Wähle ein Video oder Overlay aus. Nutze anschließend die Keyframe-Leiste unter der Vorschau (oder den ◆-Knopf oben) um Größe, Position und Effekte zu animieren.</div>'; return; }
   const kfs = target.keyframes||[];
   if(kfs.length===0){ el.innerHTML='<div class="no-selection">Noch keine Keyframes. Passe Größe, Position, Drehung oder Effekte an und drücke „◆ Keyframe“ in der Leiste unter der Vorschau.</div>'; return; }
   el.innerHTML='<div class="section-title">Gesetzte Keyframes</div>';
@@ -2615,7 +3037,7 @@ function renderKeyframesTab(){
     }
     item.innerHTML = `<span class="t">${k.t.toFixed(1)}s</span><span class="v">${parts.join(' · ')||'Keyframe'}</span><button title="Löschen">✕</button>`;
     item.addEventListener('click', (e)=>{ if(e.target.tagName==='BUTTON') return; seekTo(startAbs+k.t); renderAll(); });
-    item.querySelector('button').addEventListener('click', (e)=>{ e.stopPropagation(); kfs.splice(idx,1); queueAutosave(); renderAll(); });
+    item.querySelector('button').addEventListener('click', (e)=>{ e.stopPropagation(); kfs.splice(idx,1); queueAutosave(); pushHistory(); renderAll(); });
     group.appendChild(item);
   });
   el.appendChild(group);
@@ -2632,7 +3054,7 @@ function fieldRangeHtml(id,label,min,max,step,val,unit){
 function renderOverlayTab(){
   const el = document.getElementById('tabOverlay');
   const o = selectedOverlay();
-  if(!o){ el.innerHTML='<div class="no-selection">Wähle ein Overlay in der Timeline oder links in der Liste aus. Neue Text- und Sticker-Overlays kannst du links im Panel „Overlays & Sticker“ hinzufügen.</div>'; return; }
+  if(!o){ el.innerHTML='<div class="no-selection">Wähle ein Overlay in der Timeline oder links in der Liste aus. Neue Text- und Sticker-Overlays kannst du links im Panel „Overlays & Sticker“ hinzufügen oder Bilder direkt hierher ziehen.</div>'; return; }
   const vals = computeOverlayEffective(o, localTimeForOverlay(o));
   let html='';
   if(o.kind==='text'){
@@ -2682,7 +3104,7 @@ function renderOverlayTab(){
       if(valEl) valEl.textContent = Number(inp.value).toFixed(dec)+unit;
       renderFrame();
     });
-    inp.addEventListener('change', ()=>queueAutosave());
+    inp.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
   }
   function bindOverlayKfRange(id, key, dec, unit){
     const inp = el.querySelector('#'+id);
@@ -2694,30 +3116,30 @@ function renderOverlayTab(){
       setOverlayProps(o, {[key]:v});
       renderFrame(); renderKfBar();
     });
-    inp.addEventListener('change', ()=>queueAutosave());
+    inp.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
   }
   if(o.kind==='text'){
     const ci = el.querySelector('#ovContent');
     ci.addEventListener('input', ()=>{ o.content=ci.value; renderFrame(); renderOverlayList(); });
-    ci.addEventListener('change', ()=>queueAutosave());
+    ci.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
     const fontSel = el.querySelector('#ovFont'); fontSel.value=o.fontFamily;
-    fontSel.addEventListener('change', ()=>{ o.fontFamily=fontSel.value; renderFrame(); queueAutosave(); });
-    el.querySelector('#ovBold').addEventListener('change', (e)=>{ o.bold=e.target.checked; renderFrame(); queueAutosave(); });
-    el.querySelector('#ovItalic').addEventListener('change', (e)=>{ o.italic=e.target.checked; renderFrame(); queueAutosave(); });
+    fontSel.addEventListener('change', ()=>{ o.fontFamily=fontSel.value; renderFrame(); queueAutosave(); pushHistory(); });
+    el.querySelector('#ovBold').addEventListener('change', (e)=>{ o.bold=e.target.checked; renderFrame(); queueAutosave(); pushHistory(); });
+    el.querySelector('#ovItalic').addEventListener('change', (e)=>{ o.italic=e.target.checked; renderFrame(); queueAutosave(); pushHistory(); });
     const co = el.querySelector('#ovColor');
     co.addEventListener('input', ()=>{ o.color=co.value; renderFrame(); });
-    co.addEventListener('change', ()=>queueAutosave());
-    el.querySelector('#ovOutline').addEventListener('change', (e)=>{ o.outline=e.target.checked; renderFrame(); queueAutosave(); });
+    co.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
+    el.querySelector('#ovOutline').addEventListener('change', (e)=>{ o.outline=e.target.checked; renderFrame(); queueAutosave(); pushHistory(); });
     const oc = el.querySelector('#ovOutlineColor');
     oc.addEventListener('input', ()=>{ o.outlineColor=oc.value; renderFrame(); });
-    oc.addEventListener('change', ()=>queueAutosave());
+    oc.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
     bindPlainRange('ovOutlineWidth','outlineWidth',0,'px');
-    el.querySelector('#ovBgBox').addEventListener('change', (e)=>{ o.bgBox=e.target.checked; renderFrame(); queueAutosave(); });
+    el.querySelector('#ovBgBox').addEventListener('change', (e)=>{ o.bgBox=e.target.checked; renderFrame(); queueAutosave(); pushHistory(); });
     const bgc = el.querySelector('#ovBgColor');
     bgc.addEventListener('input', ()=>{ o.bgColor = hexToRgba(bgc.value, 0.6); renderFrame(); });
-    bgc.addEventListener('change', ()=>queueAutosave());
+    bgc.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
     const animSel = el.querySelector('#ovAnimPreset'); animSel.value=o.animPreset;
-    animSel.addEventListener('change', ()=>{ o.animPreset=animSel.value; renderFrame(); queueAutosave(); });
+    animSel.addEventListener('change', ()=>{ o.animPreset=animSel.value; renderFrame(); queueAutosave(); pushHistory(); });
     bindPlainRange('ovAnimDur','animDur',1,'s');
   } else if(o.kind==='image'){
     bindPlainRange('ovRadius','radius',0,'%');
@@ -2771,13 +3193,13 @@ function renderAudioTab(){
     el.querySelector('#acVolVal').textContent=a.volume+'%';
     if(a.gainNode) a.gainNode.gain.value = (document.getElementById('volumeRange').value/100)*(a.volume/100);
   });
-  vol.addEventListener('change', ()=>queueAutosave());
+  vol.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
   const fi = el.querySelector('#acFadeIn');
   fi.addEventListener('input', ()=>{ a.fadeIn=Number(fi.value); el.querySelector('#acFadeInVal').textContent=a.fadeIn.toFixed(1)+'s'; });
-  fi.addEventListener('change', ()=>queueAutosave());
+  fi.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
   const fo = el.querySelector('#acFadeOut');
   fo.addEventListener('input', ()=>{ a.fadeOut=Number(fo.value); el.querySelector('#acFadeOutVal').textContent=a.fadeOut.toFixed(1)+'s'; });
-  fo.addEventListener('change', ()=>queueAutosave());
+  fo.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
 }
 
 /* ===================== Tabs ===================== */
@@ -2800,6 +3222,54 @@ document.querySelectorAll('.mobile-nav button').forEach(btn=>{
   });
 });
 
+/* ===================== Größenverstellbare Panels ===================== */
+function setupPanelResize(handleId, cssVar, {min, max, invert}){
+  const handle = document.getElementById(handleId);
+  handle.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add('dragging');
+    const startX = e.clientX;
+    const workspace = document.getElementById('workspace');
+    const startWidth = parseFloat(getComputedStyle(workspace).getPropertyValue(cssVar)) || 260;
+    function onMove(ev){
+      const dx = (ev.clientX-startX) * (invert?-1:1);
+      const nw = clamp(startWidth+dx, min, max);
+      workspace.style.setProperty(cssVar, nw+'px');
+    }
+    function onUp(){
+      handle.releasePointerCapture(e.pointerId);
+      handle.classList.remove('dragging');
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      savePanelWidths();
+    }
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+  });
+}
+function savePanelWidths(){
+  const workspace = document.getElementById('workspace');
+  const w = {
+    media: parseFloat(getComputedStyle(workspace).getPropertyValue('--media-w')) || 228,
+    inspector: parseFloat(getComputedStyle(workspace).getPropertyValue('--inspector-w')) || 320,
+  };
+  try{ localStorage.setItem(PANEL_W_KEY, JSON.stringify(w)); }catch(e){}
+}
+function restorePanelWidths(){
+  try{
+    const raw = localStorage.getItem(PANEL_W_KEY);
+    if(!raw) return;
+    const w = JSON.parse(raw);
+    const workspace = document.getElementById('workspace');
+    if(w.media) workspace.style.setProperty('--media-w', clamp(w.media,180,420)+'px');
+    if(w.inspector) workspace.style.setProperty('--inspector-w', clamp(w.inspector,240,520)+'px');
+  }catch(e){}
+}
+setupPanelResize('mediaResizeHandle', '--media-w', {min:180, max:420, invert:false});
+setupPanelResize('inspectorResizeHandle', '--inspector-w', {min:240, max:520, invert:true});
+restorePanelWidths();
+
 /* ===================== Gesamt-Render ===================== */
 function renderAll(){
   renderMediaList();
@@ -2813,12 +3283,13 @@ function renderAll(){
   renderAudioTab();
   renderKfBar();
   renderFrame();
+  updateHistoryButtons();
 }
 
 /* ===================== Projektname ===================== */
 const projNameInput = document.getElementById('projectName');
 projNameInput.addEventListener('input', ()=>{ state.projectName = projNameInput.value; });
-projNameInput.addEventListener('change', ()=>queueAutosave());
+projNameInput.addEventListener('change', ()=>{ queueAutosave(); pushHistory(); });
 
 /* ===================== Autospeicherung ===================== */
 async function buildProjectMetadata(){
@@ -2934,6 +3405,7 @@ function loadProjectFromData(data){
 
   state.selection = {type:null,id:null};
   seekTo(0);
+  undoStack=[]; redoStack=[]; updateHistoryButtons();
   renderAll();
 }
 function showRestoreBanner(){
@@ -3062,7 +3534,7 @@ function startExportRecording(speed){
   document.getElementById('btnExportVideo').disabled = true;
   showExportProgressScreen();
   seekTo(0);
-  renderFrame(); // Hintergrund sofort auf Schwarz setzen
+  renderFrame();
   mediaRecorder.start(250);
   requestAnimationFrame(()=>togglePlay());
 }
@@ -3090,7 +3562,7 @@ function onRecordingStopped(){
   document.getElementById('recIndicator').classList.add('hidden');
   document.getElementById('btnExportVideo').disabled = false;
   hideExportProgressScreen();
-  renderFrame(); // Hintergrund wieder hell
+  renderFrame();
 }
 
 /* ---- Fortschritts-Screen: nur Anzeige + Abbrechen, keine Einstellungen ---- */
@@ -3190,6 +3662,7 @@ setCanvasAspect('16:9');
 setSaveStatus('', hasStorageApi? 'noch nicht gespeichert' : 'Auto-Speicher nicht verfügbar');
 tryRestoreAutosave();
 renderAll();
+updateHistoryButtons();
 requestAnimationFrame(tick);
 
 })();
