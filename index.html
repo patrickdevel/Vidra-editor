@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Vidra – Video-Editor</title>
-<link rel="icon" type="image/png" href="vidrapng.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Anton&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
@@ -597,7 +596,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div id="secVideo">
         <div class="panel-head">🎬 Video-Clips</div>
         <div class="add-row">
-          <label class="btn file-btn" style="justify-content:center;">+ Video hinzufügen<input type="file" id="mediaInput" accept="video/*" multiple hidden></label>
+          <label class="btn file-btn" style="justify-content:center;">+ Video hinzufügen<input type="file" id="mediaInput" accept="video/*,.mkv,.avi,.wmv,.flv,.mpg,.mpeg,.ts,.m2ts,.3gp" multiple hidden></label>
         </div>
         <div class="media-list" id="mediaList"></div>
       </div>
@@ -605,7 +604,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="panel-section" id="secAudio">
         <div class="panel-head">🎵 Ton &amp; Musik</div>
         <div class="add-row">
-          <label class="btn file-btn" style="justify-content:center;">+ Ton hinzufügen<input type="file" id="audioInput" accept="audio/*" multiple hidden></label>
+          <label class="btn file-btn" style="justify-content:center;">+ Ton hinzufügen<input type="file" id="audioInput" accept="audio/*,.flac,.wma,.aiff,.aif" multiple hidden></label>
         </div>
         <div class="list-scroll" id="audioList"></div>
       </div>
@@ -614,7 +613,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="panel-head">✨ Overlays &amp; Sticker</div>
         <div class="add-row">
           <button class="btn" id="btnAddText">+ Text hinzufügen</button>
-          <label class="btn file-btn" style="justify-content:center;">+ Bild/GIF-Sticker<input type="file" id="stickerImgInput" accept="image/*" hidden></label>
+          <label class="btn file-btn" style="justify-content:center;">+ Bild/GIF-Sticker<input type="file" id="stickerImgInput" accept="image/*,.heic,.heif,.avif,.tif,.tiff" hidden></label>
         </div>
         <div class="cat-pill-row" id="stickerCatRow"></div>
         <div class="sticker-grid" id="stickerGrid"></div>
@@ -939,12 +938,34 @@ function roundRectPath(c, x, y, w, h, r){
   c.arcTo(x, y, x+r, y, r);
   c.closePath();
 }
-function toast(msg){
+function toast(msg, long){
   const stack = document.getElementById('toastStack');
   const t = document.createElement('div');
   t.className='toast'; t.textContent=msg;
+  if(long) t.style.animationDuration='.22s, .22s';
   stack.appendChild(t);
-  setTimeout(()=>t.remove(), 1900);
+  setTimeout(()=>t.remove(), long?3600:1900);
+}
+
+/* ===================== Dateiformat-Erkennung ===================== */
+/* Manche Browser liefern für weniger gängige Formate ein leeres file.type
+   (z.B. .mkv, .avi, .heic). Damit solche Dateien nicht fälschlich abgelehnt
+   werden, wird zusätzlich anhand der Dateiendung geprüft. */
+const VIDEO_EXTENSIONS = ['mp4','m4v','webm','mov','ogv','avi','mkv','wmv','flv','3gp','3gpp','mpg','mpeg','ts','m2ts'];
+const AUDIO_EXTENSIONS = ['mp3','wav','ogg','oga','m4a','aac','flac','opus','wma','weba','aiff','aif'];
+const IMAGE_EXTENSIONS = ['png','jpg','jpeg','gif','webp','bmp','svg','avif','heic','heif','ico','tif','tiff'];
+function fileExt(file){
+  const m = /\.([a-z0-9]+)$/i.exec((file&&file.name)||'');
+  return m ? m[1].toLowerCase() : '';
+}
+function isVideoFile(file){ return !!file && (file.type.startsWith('video/') || (!file.type && VIDEO_EXTENSIONS.includes(fileExt(file)))); }
+function isAudioFile(file){ return !!file && (file.type.startsWith('audio/') || (!file.type && AUDIO_EXTENSIONS.includes(fileExt(file)))); }
+function isImageFile(file){ return !!file && (file.type.startsWith('image/') || (!file.type && IMAGE_EXTENSIONS.includes(fileExt(file)))); }
+function fileKindLabel(file){
+  if(isVideoFile(file)) return 'Video';
+  if(isAudioFile(file)) return 'Ton';
+  if(isImageFile(file)) return 'Bild';
+  return 'Datei';
 }
 function getNoisePattern(){
   if(noisePatternCanvas) return noisePatternCanvas;
@@ -1115,6 +1136,11 @@ function attachVideoElement(clip, isRestore){
     else { clip.trimOut = Math.min(clip.trimOut||v.duration, v.duration); clip.duration=v.duration; }
     generateThumb(clip);
     renderAll(); queueAutosave();
+  });
+  v.addEventListener('error', ()=>{
+    toast(`„${clip.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
+    if(state.clips.some(c=>c.id===clip.id)) removeClip(clip.id);
+    else { renderAll(); queueAutosave(); }
   });
 }
 function generateThumb(clip){
@@ -1911,6 +1937,16 @@ function seekTo(t){
 }
 
 function tick(){
+  try{
+    tickInner();
+  }catch(err){
+    // Sicherheitsnetz: ein einzelner Wiedergabe-/Renderfehler (z.B. durch eine
+    // nicht unterstützte Datei) darf die App niemals komplett einfrieren lassen.
+    console.error('Vidra: Fehler in der Wiedergabe-Schleife', err);
+  }
+  requestAnimationFrame(tick);
+}
+function tickInner(){
   const now = performance.now();
   const dt = lastTickTs ? (now-lastTickTs)/1000 : 0;
   lastTickTs = now;
@@ -1965,7 +2001,6 @@ function tick(){
   if(state.isExporting){
     updateExportProgressUI();
   }
-  requestAnimationFrame(tick);
 }
 
 document.getElementById('btnPlay').addEventListener('click', togglePlay);
@@ -2102,13 +2137,15 @@ document.addEventListener('contextmenu', (e)=>{
 
 /* ===================== Medien hinzufügen / entfernen (Video) ===================== */
 function addVideoFiles(files){
+  let added=0;
   files.forEach(file=>{
-    if(!file.type.startsWith('video/')) return;
+    if(!isVideoFile(file)){ toast(`„${file.name}“ ist kein unterstütztes Videoformat.`, true); return; }
     const clip = createClipFromFile(file);
     state.clips.push(clip);
     if(!state.selection.type) state.selection = {type:'video', id:clip.id};
+    added++;
   });
-  renderAll(); queueAutosave(); pushHistory();
+  if(added>0){ renderAll(); queueAutosave(); pushHistory(); }
 }
 document.getElementById('mediaInput').addEventListener('change', e=>{
   addVideoFiles(Array.from(e.target.files||[]));
@@ -2136,6 +2173,7 @@ function moveClip(id, dir){
   renderAll(); queueAutosave(); pushHistory();
 }
 function relinkClip(id, file){
+  if(!isVideoFile(file)){ toast(`„${file.name}“ ist kein unterstütztes Videoformat.`, true); return; }
   const idx = state.clips.findIndex(c=>c.id===id);
   if(idx<0) return;
   const old = state.clips[idx];
@@ -2152,8 +2190,9 @@ function selectedOverlay(){ return state.selection.type==='overlay' ? state.over
 
 /* ===================== Ton-Clips ===================== */
 function addAudioFiles(files){
+  let added=0;
   files.forEach(file=>{
-    if(!file.type.startsWith('audio/')) return;
+    if(!isAudioFile(file)){ toast(`„${file.name}“ ist kein unterstütztes Ton-Format.`, true); return; }
     const url = URL.createObjectURL(file);
     const el = document.createElement('audio');
     el.src=url; el.preload='auto'; el.crossOrigin='anonymous';
@@ -2161,10 +2200,15 @@ function addAudioFiles(files){
     const a = {id:uid(), name:file.name, sourceFile:file, url, audioEl:el, duration:0, trimIn:0, trimOut:0,
       startTime: state.playheadTime, volume:100, fadeIn:0, fadeOut:0, gainNode:null, connected:false, needsRelink:false};
     el.addEventListener('loadedmetadata', ()=>{ a.duration=el.duration; a.trimOut=el.duration; renderAll(); queueAutosave(); });
+    el.addEventListener('error', ()=>{
+      toast(`„${a.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
+      if(state.audioClips.some(x=>x.id===a.id)) removeAudioClip(a.id);
+    });
     state.audioClips.push(a);
     state.selection = {type:'audio', id:a.id};
+    added++;
   });
-  renderAll(); queueAutosave(); pushHistory();
+  if(added>0){ renderAll(); queueAutosave(); pushHistory(); }
 }
 document.getElementById('audioInput').addEventListener('change', e=>{
   addAudioFiles(Array.from(e.target.files||[]));
@@ -2181,6 +2225,7 @@ function removeAudioClip(id){
   renderAll(); queueAutosave(); pushHistory();
 }
 function relinkAudioClip(id, file){
+  if(!isAudioFile(file)){ toast(`„${file.name}“ ist kein unterstütztes Ton-Format.`, true); return; }
   const idx = state.audioClips.findIndex(a=>a.id===id);
   if(idx<0) return;
   const old = state.audioClips[idx];
@@ -2192,6 +2237,14 @@ function relinkAudioClip(id, file){
     trimIn:old.trimIn, trimOut:old.trimOut, startTime:old.startTime, volume:old.volume,
     fadeIn:old.fadeIn||0, fadeOut:old.fadeOut||0, gainNode:null, connected:false, needsRelink:false};
   el.addEventListener('loadedmetadata', ()=>{ renderAll(); queueAutosave(); });
+  el.addEventListener('error', ()=>{
+    toast(`„${a.name}“ konnte nicht geladen werden – Format wird von diesem Browser nicht unterstützt.`, true);
+    const stillIdx = state.audioClips.findIndex(x=>x.id===a.id);
+    if(stillIdx>=0){
+      state.audioClips[stillIdx] = {...old, needsRelink:true};
+      renderAll(); queueAutosave();
+    }
+  });
   state.audioClips[idx]=a;
   renderAll(); queueAutosave();
 }
@@ -2220,7 +2273,8 @@ document.getElementById('btnAddText').addEventListener('click', ()=>{
   renderAll(); queueAutosave(); pushHistory();
 });
 function addImageStickerFile(file){
-  if(!file || !file.type.startsWith('image/')) return;
+  if(!file) return;
+  if(!isImageFile(file)){ toast(`„${file.name}“ ist kein unterstütztes Bildformat.`, true); return; }
   const url = URL.createObjectURL(file);
   const img = createOverlayImageEl(url);
   img.onload = ()=>{
@@ -2233,6 +2287,10 @@ function addImageStickerFile(file){
     state.overlays.push(o);
     state.selection={type:'overlay', id:o.id};
     renderAll(); queueAutosave(); pushHistory();
+  };
+  img.onerror = ()=>{
+    toast(`„${file.name}“ konnte nicht geladen werden – Bildformat wird von diesem Browser nicht unterstützt.`, true);
+    URL.revokeObjectURL(url);
   };
 }
 document.getElementById('stickerImgInput').addEventListener('change', e=>{
@@ -2314,43 +2372,48 @@ function setupDropzone(el, {accept, overlayIcon, overlayText, onFiles}){
   el.addEventListener('drop', e=>{
     if(!hasMatchingFile(e.dataTransfer)) return;
     e.preventDefault(); hideOverlay();
-    const files = Array.from(e.dataTransfer.files||[]).filter(f=>accept(f));
-    if(files.length===0){ toast('Keine passende Datei erkannt'); return; }
+    const allFiles = Array.from(e.dataTransfer.files||[]);
+    const files = allFiles.filter(f=>accept(f));
+    if(files.length===0){
+      if(allFiles.length>0) toast(`Keine passende Datei erkannt (${fileKindLabel(allFiles[0])}-Format wird evtl. nicht unterstützt).`, true);
+      else toast('Keine passende Datei erkannt');
+      return;
+    }
     onFiles(files);
   });
 }
 setupDropzone(document.getElementById('secVideo'), {
-  accept:f=>f.type.startsWith('video/'), overlayIcon:'🎬', overlayText:'Video hier ablegen',
+  accept:isVideoFile, overlayIcon:'🎬', overlayText:'Video hier ablegen',
   onFiles:addVideoFiles,
 });
 setupDropzone(document.getElementById('videoTrack'), {
-  accept:f=>f.type.startsWith('video/'), overlayIcon:'🎬', overlayText:'Video hier ablegen',
+  accept:isVideoFile, overlayIcon:'🎬', overlayText:'Video hier ablegen',
   onFiles:addVideoFiles,
 });
 setupDropzone(document.getElementById('secAudio'), {
-  accept:f=>f.type.startsWith('audio/'), overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
+  accept:isAudioFile, overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
   onFiles:addAudioFiles,
 });
 setupDropzone(document.getElementById('audioTrack'), {
-  accept:f=>f.type.startsWith('audio/'), overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
+  accept:isAudioFile, overlayIcon:'🎵', overlayText:'Ton/Musik hier ablegen',
   onFiles:addAudioFiles,
 });
 setupDropzone(document.getElementById('secOverlay'), {
-  accept:f=>f.type.startsWith('image/'), overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
+  accept:isImageFile, overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
   onFiles:files=>files.forEach(addImageStickerFile),
 });
 setupDropzone(document.getElementById('overlayTrack'), {
-  accept:f=>f.type.startsWith('image/'), overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
+  accept:isImageFile, overlayIcon:'🖼️', overlayText:'Bild/GIF hier ablegen',
   onFiles:files=>files.forEach(addImageStickerFile),
 });
 // Canvas selbst akzeptiert alle drei Medientypen und sortiert sie automatisch ein.
 setupDropzone(document.getElementById('canvasWrap'), {
-  accept:f=> f.type.startsWith('video/')||f.type.startsWith('audio/')||f.type.startsWith('image/'),
+  accept:f=> isVideoFile(f)||isAudioFile(f)||isImageFile(f),
   overlayIcon:'⬇️', overlayText:'Video, Ton oder Bild hier ablegen',
   onFiles:files=>{
-    const vids=files.filter(f=>f.type.startsWith('video/'));
-    const auds=files.filter(f=>f.type.startsWith('audio/'));
-    const imgs=files.filter(f=>f.type.startsWith('image/'));
+    const vids=files.filter(isVideoFile);
+    const auds=files.filter(isAudioFile);
+    const imgs=files.filter(isImageFile);
     if(vids.length) addVideoFiles(vids);
     if(auds.length) addAudioFiles(auds);
     imgs.forEach(addImageStickerFile);
@@ -2379,8 +2442,8 @@ function renderMediaList(){
       const lbl = document.createElement('label');
       lbl.className='btn file-btn'; lbl.textContent='Datei erneut auswählen';
       const input = document.createElement('input');
-      input.type='file'; input.accept='video/*'; input.hidden=true;
-      input.addEventListener('change', ()=>{ if(input.files[0]) relinkClip(c.id, input.files[0]); });
+      input.type='file'; input.accept='video/*,.mkv,.avi,.wmv,.flv,.mpg,.mpeg,.ts,.m2ts,.3gp'; input.hidden=true;
+      input.addEventListener('change', ()=>{ if(input.files[0]) relinkClip(c.id, input.files[0]); input.value=''; });
       lbl.appendChild(input); row.appendChild(lbl);
       row.addEventListener('contextmenu', (e)=>{
         e.preventDefault(); e.stopPropagation();
@@ -2434,8 +2497,8 @@ function renderAudioList(){
       const lbl = document.createElement('label');
       lbl.className='btn file-btn'; lbl.textContent='Datei erneut auswählen';
       const input = document.createElement('input');
-      input.type='file'; input.accept='audio/*'; input.hidden=true;
-      input.addEventListener('change', ()=>{ if(input.files[0]) relinkAudioClip(a.id, input.files[0]); });
+      input.type='file'; input.accept='audio/*,.flac,.wma,.aiff,.aif'; input.hidden=true;
+      input.addEventListener('change', ()=>{ if(input.files[0]) relinkAudioClip(a.id, input.files[0]); input.value=''; });
       lbl.appendChild(input); row.appendChild(lbl);
       row.addEventListener('contextmenu', (e)=>{
         e.preventDefault(); e.stopPropagation();
