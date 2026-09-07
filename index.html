@@ -2656,6 +2656,57 @@ function renderOverlayTrack(){
   });
 }
 
+/* Leichte Repositionierung während des Ziehens: nur Styles/Text aktualisieren, KEINE
+   DOM-Elemente entfernen/neu erzeugen. Würde man hier renderTimeline() aufrufen, werden
+   alle Blöcke (inkl. des gerade gezogenen Griffs) zerstört und neu gebaut – dabei geht die
+   pointer capture verloren und der Drag bricht nach wenigen Pixeln ab. Der vollständige
+   renderTimeline()-Rebuild passiert daher erst beim Loslassen (onUp). */
+function repositionVideoBlocksLite(){
+  const layout = computeVideoLayout();
+  const track = document.getElementById('videoTrack');
+  const blocks = track.querySelectorAll('.blk.video-blk');
+  layout.forEach((entry,i)=>{
+    const el = blocks[i];
+    if(!el) return;
+    el.style.left = (entry.start*PX_PER_SEC)+'px';
+    el.style.width = Math.max(clipDuration(entry.clip)*PX_PER_SEC,10)+'px';
+    const durEl = el.querySelector('.blk-dur');
+    if(durEl) durEl.textContent = fmtTime(clipDuration(entry.clip));
+  });
+  const badges = track.querySelectorAll('.trans-badge');
+  let bi=0;
+  layout.forEach((entry,i)=>{
+    const next = layout[i+1];
+    if(!next) return;
+    const tDur = getEffectiveTransitionDur(entry.clip, next.clip);
+    if(tDur>0 && badges[bi]){
+      badges[bi].style.left = (next.start*PX_PER_SEC)+'px';
+      badges[bi].style.width = Math.max((entry.end-next.start)*PX_PER_SEC,6)+'px';
+      bi++;
+    }
+  });
+  const fullTotal = timelineLength();
+  document.getElementById('timelineInner').style.width = Math.max(fullTotal*PX_PER_SEC,300)+'px';
+}
+function repositionAudioBlockLite(el, a){
+  if(!el) return;
+  el.style.left = (a.startTime*PX_PER_SEC)+'px';
+  el.style.width = Math.max((a.trimOut-a.trimIn)*PX_PER_SEC,10)+'px';
+  const durEl = el.querySelector('.blk-dur');
+  if(durEl) durEl.textContent = fmtTime(a.trimOut-a.trimIn);
+  const fullTotal = timelineLength();
+  document.getElementById('timelineInner').style.width = Math.max(fullTotal*PX_PER_SEC,300)+'px';
+}
+function repositionOverlayBlockLite(el, o){
+  if(!el) return;
+  el.style.left = (o.start*PX_PER_SEC)+'px';
+  el.style.width = Math.max((o.end-o.start)*PX_PER_SEC,10)+'px';
+  const durEl = el.querySelector('.blk-dur');
+  if(durEl) durEl.textContent = fmtTime(o.end-o.start);
+  const fullTotal = timelineLength();
+  document.getElementById('timelineInner').style.width = Math.max(fullTotal*PX_PER_SEC,300)+'px';
+}
+
 function setupTrimHandle(handleEl, clip, side){
   handleEl.addEventListener('pointerdown', (e)=>{
     e.stopPropagation(); e.preventDefault();
@@ -2666,13 +2717,13 @@ function setupTrimHandle(handleEl, clip, side){
       const dx = (ev.clientX-startX)/PX_PER_SEC;
       if(side==='in') clip.trimIn = clamp(startIn+dx, 0, clip.trimOut-0.2);
       else clip.trimOut = clamp(startOut+dx, clip.trimIn+0.2, clip.duration);
-      renderTimeline(); renderFrame();
+      repositionVideoBlocksLite(); renderFrame();
     }
     function onUp(){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave(); pushHistory();
+      renderAll(); queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2684,17 +2735,18 @@ function setupAudioTrimHandle(handleEl, a, side){
     handleEl.setPointerCapture(e.pointerId);
     const startX = e.clientX;
     const startIn = a.trimIn, startOut = a.trimOut;
+    const blockEl = handleEl.closest('.blk');
     function onMove(ev){
       const dx = (ev.clientX-startX)/PX_PER_SEC;
       if(side==='in') a.trimIn = clamp(startIn+dx, 0, a.trimOut-0.2);
       else a.trimOut = clamp(startOut+dx, a.trimIn+0.2, a.duration);
-      renderTimeline(); renderFrame();
+      repositionAudioBlockLite(blockEl, a); renderFrame();
     }
     function onUp(){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave(); pushHistory();
+      renderAll(); queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2706,17 +2758,18 @@ function setupOverlayEdgeHandle(handleEl, o, side){
     handleEl.setPointerCapture(e.pointerId);
     const startX = e.clientX;
     const startS = o.start, startE = o.end;
+    const blockEl = handleEl.closest('.blk');
     function onMove(ev){
       const dx = (ev.clientX-startX)/PX_PER_SEC;
       if(side==='start') o.start = clamp(startS+dx, 0, o.end-0.3);
       else o.end = clamp(startE+dx, o.start+0.3, startE+100000);
-      renderTimeline(); renderFrame();
+      repositionOverlayBlockLite(blockEl, o); renderFrame();
     }
     function onUp(){
       handleEl.releasePointerCapture(e.pointerId);
       handleEl.removeEventListener('pointermove', onMove);
       handleEl.removeEventListener('pointerup', onUp);
-      queueAutosave(); pushHistory();
+      renderAll(); queueAutosave(); pushHistory();
     }
     handleEl.addEventListener('pointermove', onMove);
     handleEl.addEventListener('pointerup', onUp);
@@ -2734,19 +2787,22 @@ function setupDragMove(blockEl, item, kind){
       const dx = (ev.clientX-startX);
       if(Math.abs(dx)>3) moved=true;
       const dSec = dx/PX_PER_SEC;
-      if(kind==='audio'){ item.startTime = clamp(startVals.startTime+dSec, 0, 100000); }
-      else{
+      if(kind==='audio'){
+        item.startTime = clamp(startVals.startTime+dSec, 0, 100000);
+        repositionAudioBlockLite(blockEl, item);
+      } else {
         const dur = startVals.end-startVals.start;
         const ns = clamp(startVals.start+dSec, 0, 100000);
         item.start = ns; item.end = ns+dur;
+        repositionOverlayBlockLite(blockEl, item);
       }
-      renderTimeline(); renderFrame();
+      renderFrame();
     }
     function onUp(){
       blockEl.releasePointerCapture(e.pointerId);
       blockEl.removeEventListener('pointermove', onMove);
       blockEl.removeEventListener('pointerup', onUp);
-      if(moved){ queueAutosave(); pushHistory(); }
+      if(moved){ renderAll(); queueAutosave(); pushHistory(); }
       else selectItem(kind, item.id);
     }
     blockEl.addEventListener('pointermove', onMove);
