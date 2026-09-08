@@ -9,45 +9,44 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Anton&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-base:#08090e;
-  --bg-panel:#121320;
-  --bg-elevated:#191b2a;
-  --bg-elevated-2:#242637;
-  --bg-glass:rgba(19,20,34,.72);
-  --border:#31324a;
-  --border-soft:#1d1e2d;
-  --text:#f4f5fb;
-  --text-muted:#9195b0;
-  --text-faint:#585c76;
-  --accent:#c4b5fd;
-  --accent-2:#67e8f9;
-  --accent-ink:#161129;
-  --accent-dim:#4a4272;
-  --accent-soft:rgba(196,181,253,.15);
-  --violet:#fbbf24;
-  --violet-dim:#6b5218;
-  --track-audio:#38bdf8;
-  --track-audio-dim:#1a3a52;
-  --track-overlay:#f472b6;
-  --track-overlay-dim:#552146;
-  --rec:#fb5a5a;
-  --ok:#34d399;
-  --radius-s:9px;
-  --radius-m:13px;
+  --bg-base:#0c0d11;
+  --bg-panel:#141620;
+  --bg-elevated:#1c1f2b;
+  --bg-elevated-2:#262a38;
+  --bg-glass:rgba(28,31,43,.72);
+  --border:#333748;
+  --border-soft:#242737;
+  --text:#f1f2f6;
+  --text-muted:#8d92a8;
+  --text-faint:#5b5f74;
+  --accent:#d4f564;
+  --accent-2:#a9e63e;
+  --accent-ink:#10230a;
+  --accent-dim:#4c5a2c;
+  --accent-soft:rgba(212,245,100,.14);
+  --violet:#8b7bff;
+  --violet-dim:#463f7d;
+  --track-audio:#5fa8d9;
+  --track-audio-dim:#2a4258;
+  --track-overlay:#f083c2;
+  --track-overlay-dim:#5a2f47;
+  --rec:#ff5d55;
+  --ok:#57e0a3;
+  --radius-s:8px;
+  --radius-m:12px;
   --radius-pill:999px;
   --font-ui:'Space Grotesk',system-ui,sans-serif;
   --font-mono:'JetBrains Mono',monospace;
   --ease:cubic-bezier(.22,.8,.35,1);
   --ease-snap:cubic-bezier(.5,0,.15,1);
-  --glow-rgb:124,92,255;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
 body{
   margin:0;
   background:
-    radial-gradient(circle at 15% -8%, rgba(124,92,255,.13) 0%, transparent 45%),
-    radial-gradient(circle at 88% 8%, rgba(103,232,249,.08) 0%, transparent 40%),
+    radial-gradient(circle at 15% -8%, rgba(139,123,255,.10) 0%, transparent 45%),
+    radial-gradient(circle at 88% 8%, rgba(212,245,100,.06) 0%, transparent 40%),
     var(--bg-base);
   color:var(--text);font-family:var(--font-ui);
   font-size:14px;overflow:hidden;
@@ -77,21 +76,20 @@ input,select{font-family:var(--font-ui);}
 
 /* ---------- Topbar ---------- */
 .topbar{
-  display:flex;align-items:center;gap:10px;padding:11px 16px;
-  background:linear-gradient(180deg,#181a2c,var(--bg-panel));
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  background:linear-gradient(180deg,#171a24,var(--bg-panel));
   border-bottom:1px solid var(--border-soft);flex-shrink:0;overflow-x:auto;
-  box-shadow:0 4px 22px rgba(0,0,0,.32);
+  box-shadow:0 4px 18px rgba(0,0,0,.28);
   position:relative;z-index:6;
 }
 .brand-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;line-height:1;}
 .brand-mark{
-  width:26px;height:26px;border-radius:9px;
+  width:24px;height:24px;border-radius:8px;
   background:linear-gradient(135deg,var(--accent-2),var(--accent));
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--accent-ink);flex-shrink:0;
-  box-shadow:0 2px 12px rgba(124,92,255,.38),inset 0 1px 0 rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:var(--accent-ink);flex-shrink:0;
+  box-shadow:0 2px 10px rgba(212,245,100,.28);
 }
-.brand{font-weight:700;font-size:17px;color:var(--text);letter-spacing:-.3px;background:linear-gradient(135deg,var(--text),var(--text-muted));-webkit-background-clip:text;background-clip:text;}
+.brand{font-weight:700;font-size:17px;color:var(--text);letter-spacing:-.2px;}
 .brand-sub{font-size:8px;letter-spacing:2px;color:var(--text-faint);font-weight:600;margin-top:-3px;}
 .project-name-input{
   background:transparent;border:1px solid transparent;color:var(--text);font-size:14px;
@@ -115,19 +113,17 @@ input,select{font-family:var(--font-ui);}
 .top-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0;}
 
 .btn{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);padding:9px 16px;
+  background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);padding:9px 15px;
   border-radius:var(--radius-pill);font-size:12.5px;font-weight:500;white-space:nowrap;
   transition:background .15s var(--ease),border-color .15s var(--ease),transform .12s var(--ease-snap),box-shadow .15s var(--ease);
 }
-.btn svg{width:14px;height:14px;flex-shrink:0;}
 .btn:hover{background:var(--bg-elevated-2);border-color:var(--text-faint);transform:translateY(-1px);}
 .btn:active{transform:translateY(0) scale(.96);}
 .btn.primary{
   background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);color:var(--accent-ink);font-weight:700;
-  box-shadow:0 4px 18px rgba(124,92,255,.3),inset 0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 4px 16px rgba(212,245,100,.22);
 }
-.btn.primary:hover{filter:brightness(1.05);box-shadow:0 6px 22px rgba(124,92,255,.42),inset 0 1px 0 rgba(255,255,255,.4);}
+.btn.primary:hover{filter:brightness(1.06);box-shadow:0 6px 20px rgba(212,245,100,.32);}
 .btn.danger-outline{border-color:var(--rec);color:var(--rec);background:transparent;}
 .btn.danger-outline:hover{background:rgba(255,93,85,.12);}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
@@ -140,8 +136,7 @@ input,select{font-family:var(--font-ui);}
 .panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;position:relative;}
 .media-panel{border-right:1px solid var(--border-soft);overflow-y:auto;}
 .inspector-panel{border-left:1px solid var(--border-soft);}
-.panel-head{padding:15px 14px 9px;font-size:10.5px;font-weight:700;color:var(--text-muted);letter-spacing:.7px;text-transform:uppercase;display:flex;align-items:center;gap:7px;}
-.panel-head svg{width:14px;height:14px;color:var(--accent);flex-shrink:0;}
+.panel-head{padding:15px 14px 9px;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .panel-section{border-top:1px solid var(--border-soft);padding-top:6px;margin-top:8px;}
 
 /* ---------- Panel resize handles ---------- */
@@ -149,7 +144,7 @@ input,select{font-family:var(--font-ui);}
   position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;z-index:15;background:transparent;
   transition:background .15s var(--ease);
 }
-.panel-resize-handle:hover,.panel-resize-handle.dragging{background:rgba(124,92,255,.18);}
+.panel-resize-handle:hover,.panel-resize-handle.dragging{background:rgba(212,245,100,.18);}
 .panel-resize-handle::after{
   content:'';position:absolute;top:50%;left:50%;width:3px;height:34px;transform:translate(-50%,-50%);
   border-radius:var(--radius-pill);background:var(--border);transition:background .15s var(--ease);
@@ -175,13 +170,13 @@ input,select{font-family:var(--font-ui);}
   display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;
 }
 .rail-btn{
-  width:38px;height:38px;border-radius:12px;background:transparent;border:1px solid transparent;
+  width:36px;height:36px;border-radius:11px;background:transparent;border:1px solid transparent;
   color:var(--text-faint);display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease),transform .12s var(--ease-snap);
+  transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease);
 }
 .rail-btn svg{width:18px;height:18px;}
-.rail-btn:hover{color:var(--text);background:var(--bg-elevated);transform:translateY(-1px);}
-.rail-btn.active{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));box-shadow:0 3px 14px rgba(124,92,255,.4),inset 0 1px 0 rgba(255,255,255,.35);}
+.rail-btn:hover{color:var(--text);background:var(--bg-elevated);}
+.rail-btn.active{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));box-shadow:0 3px 12px rgba(212,245,100,.25);}
 .rail-sep{width:22px;height:1px;background:var(--border-soft);margin:6px 0;flex-shrink:0;}
 .rail-spacer{flex:1;}
 
@@ -194,7 +189,7 @@ input,select{font-family:var(--font-ui);}
   transition:border-color .15s var(--ease),transform .15s var(--ease),background .15s var(--ease);
 }
 .media-item:hover{border-color:var(--text-faint);transform:translateY(-1px);background:var(--bg-elevated-2);}
-.media-item.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 14px rgba(124,92,255,.14);}
+.media-item.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 14px rgba(212,245,100,.14);}
 .media-item.selected.audio-type{border-color:var(--track-audio);box-shadow:0 0 0 1px var(--track-audio);}
 .media-item.selected.overlay-type{border-color:var(--track-overlay);box-shadow:0 0 0 1px var(--track-overlay);}
 .media-thumb{width:42px;height:32px;border-radius:var(--radius-s);background:#000;object-fit:cover;flex-shrink:0;}
@@ -204,9 +199,8 @@ input,select{font-family:var(--font-ui);}
 .media-name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .media-dur{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
 .media-actions{display:flex;flex-direction:column;gap:2px;}
-.icon-btn{background:none;border:none;color:var(--text-faint);font-size:12px;padding:5px;line-height:1;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;}
+.icon-btn{background:none;border:none;color:var(--text-faint);font-size:12px;padding:4px 6px;line-height:1;border-radius:var(--radius-pill);transition:color .15s,background .15s;}
 .icon-btn:hover{color:var(--text);background:var(--bg-elevated-2);}
-.icon-btn.del:hover{color:var(--rec);background:rgba(251,90,90,.14);}
 .relink-row{padding:8px;background:var(--bg-elevated);border:1px dashed var(--accent-dim);border-radius:var(--radius-m);}
 .relink-row .rl-name{font-size:11px;color:var(--accent);margin-bottom:6px;}
 .relink-row label.file-btn{font-size:10.5px;padding:6px 12px;}
@@ -229,8 +223,8 @@ input,select{font-family:var(--font-ui);}
 .canvas-wrap{
   flex:1;display:flex;align-items:center;justify-content:center;min-height:0;position:relative;padding:22px;
   background:
-    radial-gradient(circle at 20% 0%, rgba(124,92,255,.13) 0%, transparent 45%),
-    radial-gradient(circle at 85% 100%, rgba(103,232,249,.10) 0%, transparent 40%),
+    radial-gradient(circle at 20% 0%, rgba(139,123,255,.10) 0%, transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(212,245,100,.08) 0%, transparent 40%),
     var(--bg-elevated);
 }
 #preview{
@@ -248,7 +242,7 @@ input,select{font-family:var(--font-ui);}
 .hidden{display:none !important;}
 
 /* selection frame (on-canvas resize/rotate) */
-.sel-frame{position:absolute;border:1.5px dashed var(--accent);box-sizing:border-box;z-index:10;cursor:move;background:rgba(124,92,255,.05);border-radius:2px;}
+.sel-frame{position:absolute;border:1.5px dashed var(--accent);box-sizing:border-box;z-index:10;cursor:move;background:rgba(212,245,100,.05);border-radius:2px;}
 .sf-handle{position:absolute;width:14px;height:14px;background:var(--accent);border:2px solid var(--bg-base);border-radius:4px;z-index:11;transition:transform .12s var(--ease-snap);}
 .sf-handle:hover{transform:scale(1.15);}
 .sf-nw{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize;}
@@ -268,14 +262,14 @@ input,select{font-family:var(--font-ui);}
 }
 .transport-btn:hover{background:var(--bg-elevated-2);transform:translateY(-1px);}
 .transport-btn:active{transform:scale(.92);}
-.transport-btn.accent{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);box-shadow:0 3px 12px rgba(124,92,255,.22);}
+.transport-btn.accent{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);box-shadow:0 3px 12px rgba(212,245,100,.22);}
 .transport-btn:disabled{opacity:.35;cursor:not-allowed;}
 .transport-btn:disabled:hover{background:var(--bg-elevated);transform:none;}
 .timecode{font-family:var(--font-mono);font-size:12px;color:var(--accent);}
 .timecode.muted{color:var(--text-faint);}
 .timecode-sep{color:var(--text-faint);}
 .spacer{flex:1;}
-.mini-label{font-size:10.5px;color:var(--text-muted);display:inline-flex;align-items:center;}
+.mini-label{font-size:10.5px;color:var(--text-muted);}
 .volume-group{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-soft);padding:6px 12px 6px 10px;border-radius:var(--radius-pill);}
 input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:var(--bg-elevated-2);border-radius:var(--radius-pill);outline:none;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg-base);transition:transform .12s var(--ease-snap);}
@@ -285,13 +279,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 /* ---------- Keyframe bar (unified) ---------- */
 .kf-bar{display:flex;align-items:center;gap:9px;padding:9px 16px;border-top:1px solid var(--border-soft);background:linear-gradient(180deg,var(--bg-panel),#10121a);flex-shrink:0;flex-wrap:wrap;}
-.kf-btn{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:var(--radius-pill);font-size:11.5px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .15s var(--ease);}
+.kf-btn{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:var(--radius-pill);font-size:11.5px;white-space:nowrap;transition:all .15s var(--ease);}
 .kf-btn:hover{background:var(--bg-elevated-2);transform:translateY(-1px);}
 .kf-add{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);font-weight:700;}
 .kf-add:hover{filter:brightness(1.08);}
 .kf-del:hover{border-color:var(--rec);color:var(--rec);}
 .kf-track{flex:1;height:26px;background:var(--bg-elevated);border:1px solid var(--border-soft);border-radius:var(--radius-pill);position:relative;cursor:pointer;min-width:80px;}
-.kf-cursor{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--accent);pointer-events:none;box-shadow:0 0 6px rgba(124,92,255,.6);}
+.kf-cursor{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--accent);pointer-events:none;box-shadow:0 0 6px rgba(212,245,100,.6);}
 .kf-dot2{position:absolute;top:50%;width:10px;height:10px;background:var(--accent);border:2px solid var(--bg-base);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);cursor:pointer;transition:transform .12s var(--ease-snap);}
 .kf-dot2:hover{background:#fff;transform:translate(-50%,-50%) rotate(45deg) scale(1.25);}
 .kf-count{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);white-space:nowrap;}
@@ -299,9 +293,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 /* keyframe-set flash feedback */
 @keyframes kf-pop{
-  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(124,92,255,.7);}
-  40%{transform:scale(1.18);box-shadow:0 0 0 8px rgba(124,92,255,0);}
-  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(124,92,255,0);}
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(212,245,100,.7);}
+  40%{transform:scale(1.18);box-shadow:0 0 0 8px rgba(212,245,100,0);}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(212,245,100,0);}
 }
 .kf-flash{animation:kf-pop .38s var(--ease-snap);}
 @keyframes kf-ring-pop{
@@ -328,8 +322,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .format-group{display:flex;align-items:center;gap:7px;background:var(--bg-elevated);border:1px solid var(--border-soft);padding:5px 6px 5px 14px;border-radius:var(--radius-pill);transition:border-color .15s;}
 .format-group:hover{border-color:var(--text-faint);}
 .format-group select{background:transparent;border:none;color:var(--text);padding:4px 4px;border-radius:var(--radius-s);font-size:11.5px;}
+.format-group input[type="color"]{width:22px;height:22px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;}
+.format-group input[type="color"]::-webkit-color-swatch-wrapper{padding:2px;}
+.format-group input[type="color"]::-webkit-color-swatch{border:none;border-radius:4px;}
 .zoom-group{display:flex;align-items:center;gap:6px;margin-left:auto;background:var(--bg-elevated);border:1px solid var(--border-soft);border-radius:var(--radius-pill);padding:4px 6px;}
-.zoom-group button{width:24px;height:24px;border-radius:50%;background:transparent;border:none;color:var(--text-muted);font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;flex-shrink:0;}
+.zoom-group button{width:24px;height:24px;border-radius:50%;background:transparent;border:none;color:var(--text-muted);font-size:14px;transition:background .15s,color .15s;flex-shrink:0;}
 .zoom-group button:hover{background:var(--bg-elevated-2);color:var(--text);}
 .zoom-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);width:52px;text-align:center;}
 
@@ -337,11 +334,14 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .timeline-wrap{display:flex;height:200px;flex-shrink:0;border-top:1px solid var(--border-soft);background:var(--bg-panel);}
 .track-labels{width:64px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border-soft);background:#101219;}
 .track-labels .tl-lbl{font-size:9px;color:var(--text-faint);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding-left:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border-soft);}
-.tl-lbl svg{width:13px;height:13px;flex-shrink:0;}
+.tl-lbl::before{font-size:13px;line-height:1;}
 .tl-lbl.ruler-lbl{height:18px;border-bottom:1px solid var(--border-soft);}
 .tl-lbl.video-lbl{height:60px;color:var(--accent);}
+.tl-lbl.video-lbl::before{content:'🎬';}
 .tl-lbl.audio-lbl{height:52px;color:var(--track-audio);}
+.tl-lbl.audio-lbl::before{content:'🔊';}
 .tl-lbl.overlay-lbl{height:52px;color:var(--track-overlay);}
+.tl-lbl.overlay-lbl::before{content:'✨';}
 .timeline-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;}
 .timeline-inner{position:relative;height:100%;min-width:100%;}
 .timeline-ruler{height:18px;position:relative;border-bottom:1px solid var(--border-soft);background:#101219;}
@@ -355,14 +355,14 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 .blk{position:absolute;top:6px;bottom:6px;border-radius:var(--radius-s);overflow:hidden;border:1.5px solid var(--border);background:var(--bg-elevated);cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.35);transition:box-shadow .15s var(--ease),border-color .15s var(--ease);}
 .blk:active{cursor:grabbing;}
-.blk.video-blk.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 16px rgba(124,92,255,.18);z-index:2;}
+.blk.video-blk.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 16px rgba(212,245,100,.18);z-index:2;}
 .blk.video-blk.missing{background:repeating-linear-gradient(45deg,#241f1a,#241f1a 6px,#1b1815 6px,#1b1815 12px);border-color:var(--accent-dim);}
 .blk.audio-blk{background:var(--track-audio-dim);border-color:var(--track-audio-dim);}
 .blk.audio-blk.selected{border-color:var(--track-audio);box-shadow:0 0 0 1px var(--track-audio),0 4px 16px rgba(95,168,217,.18);}
 .blk.overlay-blk{background:var(--track-overlay-dim);border-color:var(--track-overlay-dim);}
 .blk.overlay-blk.selected{border-color:var(--track-overlay);box-shadow:0 0 0 1px var(--track-overlay),0 4px 16px rgba(240,131,194,.18);}
 .blk-body{position:absolute;inset:0;left:6px;right:6px;padding:3px 5px;display:flex;flex-direction:column;gap:1px;pointer-events:none;}
-.blk-title{font-size:10.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;}
+.blk-title{font-size:10.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .blk-dur{font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.65);}
 .blk-kf-row{position:absolute;bottom:2px;left:5px;right:5px;height:6px;pointer-events:none;}
 .kf-dot{position:absolute;width:5px;height:5px;background:var(--accent);border-radius:1px;transform:translateX(-50%) rotate(45deg);bottom:0;}
@@ -370,17 +370,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .blk-handle.left{left:0;border-right:1px solid rgba(255,255,255,.15);}
 .blk-handle.right{right:0;border-left:1px solid rgba(255,255,255,.15);}
 .blk-handle:hover{background:rgba(255,255,255,.25);}
-.blk-top-btn{position:absolute;top:1px;background:none;border:none;color:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;padding:3px;border-radius:5px;transition:color .15s,background .15s;}
-.blk-top-btn:hover{background:rgba(0,0,0,.35);}
+.blk-top-btn{position:absolute;top:1px;background:none;border:none;color:rgba(255,255,255,.55);font-size:9px;line-height:1;padding:2px;transition:color .15s;}
 .blk-top-btn:hover{color:#fff;}
 .blk-del{right:2px;}
 .blk-dup{right:15px;}
 .trans-badge{
-  position:absolute;top:6px;bottom:6px;background:repeating-linear-gradient(45deg,rgba(124,92,255,.35),rgba(124,92,255,.35) 4px,rgba(124,92,255,.13) 4px,rgba(124,92,255,.13) 8px);
+  position:absolute;top:6px;bottom:6px;background:repeating-linear-gradient(45deg,rgba(212,245,100,.35),rgba(212,245,100,.35) 4px,rgba(212,245,100,.13) 4px,rgba(212,245,100,.13) 8px);
   border:1px solid var(--accent-dim);border-radius:4px;z-index:3;display:flex;align-items:center;justify-content:center;
   font-size:10px;color:#fbffe9;pointer-events:none;
 }
-.playhead{position:absolute;top:0;bottom:0;width:1px;background:var(--accent);z-index:5;pointer-events:none;box-shadow:0 0 8px rgba(124,92,255,.5);}
+.playhead{position:absolute;top:0;bottom:0;width:1px;background:var(--accent);z-index:5;pointer-events:none;box-shadow:0 0 8px rgba(212,245,100,.5);}
 .playhead::before{content:'';position:absolute;top:0;left:-4px;width:9px;height:9px;background:var(--accent);border-radius:1px 1px 1px 0;transform:rotate(45deg);}
 
 /* ---------- Inspector ---------- */
@@ -388,10 +387,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .tab{
   flex:1 0 auto;min-width:58px;background:transparent;border:1px solid transparent;color:var(--text-muted);
   padding:8px 10px;font-size:11px;font-weight:500;border-radius:var(--radius-pill);white-space:nowrap;
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;
   transition:all .15s var(--ease);
 }
-.tab svg{width:13px;height:13px;flex-shrink:0;}
 .tab.active{color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));font-weight:700;}
 .tab:not(.active):hover{color:var(--text);background:var(--bg-elevated);}
 .tab-content{flex:1;overflow-y:auto;padding:14px;min-height:0;}
@@ -439,16 +436,15 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .kf-item button:hover{color:var(--rec);}
 
 /* ---------- Modal ---------- */
-.modal{position:fixed;inset:0;background:rgba(6,7,11,.78);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;
+.modal{position:fixed;inset:0;background:rgba(8,9,12,.72);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;
   animation:modal-fade .18s var(--ease) both;}
 @keyframes modal-fade{from{opacity:0;}to{opacity:1;}}
-.modal-box{background:var(--bg-glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:18px;width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;
-  box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);animation:modal-in .22s var(--ease) both;}
+.modal-box{background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);animation:modal-in .22s var(--ease) both;}
 @keyframes modal-in{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid var(--border-soft);}
-.modal-head h2{font-size:15px;margin:0;font-weight:700;letter-spacing:-.2px;}
-.modal-close{background:none;border:none;color:var(--text-muted);padding:6px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.modal-close svg{width:15px;height:15px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-soft);}
+.modal-head h2{font-size:15px;margin:0;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;line-height:1;padding:4px 8px;border-radius:var(--radius-pill);transition:all .15s;}
 .modal-close:hover{color:var(--text);background:var(--bg-elevated);}
 .modal-body{padding:16px 20px;overflow-y:auto;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;white-space:pre-wrap;color:var(--text-muted);}
 .modal-foot{padding:14px 20px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:9px;}
@@ -471,8 +467,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 /* ---------- Kontextmenü (Rechtsklick) ---------- */
 .context-menu{
-  position:fixed;background:var(--bg-glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);
-  border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.55);z-index:100;
+  position:fixed;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:100;
   min-width:168px;padding:5px;display:flex;flex-direction:column;
   animation:ctx-in .12s var(--ease) both;
 }
@@ -535,13 +531,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 /* ---------- Export: Fortschritts-Vollbild ---------- */
 .export-progress-screen{
   position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
-  background:rgba(6,7,11,.86);backdrop-filter:blur(8px);
+  background:rgba(8,9,12,.86);backdrop-filter:blur(6px);
   animation:modal-fade .2s var(--ease) both;
 }
 .export-progress-card{
-  background:var(--bg-glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:22px;
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:22px;
   padding:34px 36px 28px;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;
-  box-shadow:0 28px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
   animation:modal-in .25s var(--ease) both;
 }
 .export-progress-ring{position:relative;width:120px;height:120px;margin-bottom:18px;}
@@ -550,7 +546,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .epr-fill{
   fill:none;stroke:url(#none);stroke:var(--accent);stroke-width:8;stroke-linecap:round;
   stroke-dasharray:326.7256;stroke-dashoffset:326.7256;transition:stroke-dashoffset .25s var(--ease-snap);
-  filter:drop-shadow(0 0 6px rgba(124,92,255,.5));
+  filter:drop-shadow(0 0 6px rgba(212,245,100,.5));
 }
 .epr-pct{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -576,10 +572,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <input id="projectName" class="project-name-input" value="Unbenanntes Projekt" spellcheck="false">
     <div class="save-status" id="saveStatus"><span class="dot"></span><span id="saveStatusText">noch nicht gespeichert</span></div>
     <div class="top-actions">
-      <button class="btn" id="btnReport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>Bericht</button>
-      <button class="btn" id="btnExportProject"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Projekt sichern</button>
-      <label class="btn file-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Projekt laden<input type="file" id="importProjectInput" accept="application/json" hidden></label>
-      <button class="btn primary" id="btnExportVideo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>Video exportieren</button>
+      <button class="btn" id="btnReport">📊 Bericht</button>
+      <button class="btn" id="btnExportProject">💾 Projekt sichern</button>
+      <label class="btn file-btn">📂 Projekt laden<input type="file" id="importProjectInput" accept="application/json" hidden></label>
+      <button class="btn primary" id="btnExportVideo">⭳ Video exportieren</button>
     </div>
   </header>
 
@@ -601,7 +597,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     </nav>
     <aside class="panel media-panel" id="mediaPanel">
       <div id="secVideo">
-        <div class="panel-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="14" height="14" rx="2.5"/><path d="M21.5 8.2 16.5 11.2v1.6l5 3v-6.6Z"/></svg>Video-Clips</div>
+        <div class="panel-head">🎬 Video-Clips</div>
         <div class="add-row">
           <label class="btn file-btn" style="justify-content:center;">+ Video hinzufügen<input type="file" id="mediaInput" accept="video/*,.mkv,.avi,.wmv,.flv,.mpg,.mpeg,.ts,.m2ts,.3gp" multiple hidden></label>
         </div>
@@ -609,7 +605,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </div>
 
       <div class="panel-section" id="secAudio">
-        <div class="panel-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>Ton &amp; Musik</div>
+        <div class="panel-head">🎵 Ton &amp; Musik</div>
         <div class="add-row">
           <label class="btn file-btn" style="justify-content:center;">+ Ton hinzufügen<input type="file" id="audioInput" accept="audio/*,.flac,.wma,.aiff,.aif" multiple hidden></label>
         </div>
@@ -617,7 +613,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </div>
 
       <div class="panel-section" id="secOverlay">
-        <div class="panel-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>Overlays &amp; Sticker</div>
+        <div class="panel-head">✨ Overlays &amp; Sticker</div>
         <div class="add-row">
           <button class="btn" id="btnAddText">+ Text hinzufügen</button>
           <label class="btn file-btn" style="justify-content:center;">+ Bild/GIF-Sticker<input type="file" id="stickerImgInput" accept="image/*,.heic,.heif,.avif,.tif,.tiff" hidden></label>
@@ -645,11 +641,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="transport">
         <div class="tc-group"><span class="timecode" id="timeCur">00:00.0</span><span class="timecode-sep">/</span><span class="timecode muted" id="timeTotal">00:00.0</span></div>
         <div class="spacer"></div>
-        <button class="transport-btn" id="btnPlay"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 4.5v15l13-7.5Z"/></svg></button>
-        <button class="transport-btn accent" id="btnSplit" title="An Wiedergabeposition schneiden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.5 12M8.5 12 20 20"/></svg></button>
-        <button class="transport-btn" id="btnKeyframeTop" title="Keyframe an Wiedergabeposition setzen (K)"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2 22 12 12 22 2 12Z"/></svg></button>
+        <button class="transport-btn" id="btnPlay">▶</button>
+        <button class="transport-btn accent" id="btnSplit" title="An Wiedergabeposition schneiden">✂</button>
+        <button class="transport-btn" id="btnKeyframeTop" title="Keyframe an Wiedergabeposition setzen (K)">◆</button>
         <div class="spacer"></div>
-        <div class="volume-group"><span class="mini-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="M16 8a5 5 0 0 1 0 8"/></svg></span><input type="range" id="volumeRange" min="0" max="100" value="100"></div>
+        <div class="volume-group"><span class="mini-label">🔊</span><input type="range" id="volumeRange" min="0" max="100" value="100"></div>
       </div>
       <div class="kf-bar" id="kfBar"></div>
       <div class="tl-toolbar">
@@ -661,7 +657,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
           </button>
         </div>
-        <button class="btn" id="btnDuplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2.5"/><path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3H5.5A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8"/></svg>Duplizieren</button>
+        <button class="btn" id="btnDuplicate">⧉ Duplizieren</button>
         <div class="format-group">
           <span class="mini-label">Format</span>
           <select id="aspectSelect">
@@ -673,18 +669,22 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
             <option value="21:9">21:9 Kino</option>
           </select>
         </div>
+        <div class="format-group" id="bgColorGroup" title="Hintergrundfarbe hinter dem Video (statt schwarzer Balken)">
+          <span class="mini-label">Hintergrund</span>
+          <input type="color" id="canvasBgColorInput" value="#000000">
+        </div>
         <div class="zoom-group">
-          <button id="zoomOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M5 12h14"/></svg></button>
+          <button id="zoomOut">－</button>
           <span class="zoom-label" id="zoomLabel">60px/s</span>
-          <button id="zoomIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button id="zoomIn">＋</button>
         </div>
       </div>
       <div class="timeline-wrap">
         <div class="track-labels">
           <div class="tl-lbl ruler-lbl"></div>
-          <div class="tl-lbl video-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="14" height="14" rx="2.5"/><path d="M21.5 8.2 16.5 11.2v1.6l5 3v-6.6Z"/></svg>Video</div>
-          <div class="tl-lbl audio-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="M16 8a5 5 0 0 1 0 8"/></svg>Ton</div>
-          <div class="tl-lbl overlay-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>Overlay</div>
+          <div class="tl-lbl video-lbl">Video</div>
+          <div class="tl-lbl audio-lbl">Ton</div>
+          <div class="tl-lbl overlay-lbl">Overlay</div>
         </div>
         <div class="timeline-scroll" id="timelineScroll">
           <div class="timeline-inner" id="timelineInner">
@@ -701,11 +701,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <aside class="panel inspector-panel" id="inspectorPanel">
       <div class="panel-resize-handle" id="inspectorResizeHandle"></div>
       <div class="tabs">
-        <button class="tab active" data-tab="effects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V14M4 10V3M12 21v-8M12 9V3M20 21v-5M20 12V3M2 14h4M10 9h4M18 12h4"/></svg>Effekte</button>
-        <button class="tab" data-tab="transition"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H8a4 4 0 0 0-4 4v1"/><path d="m8 21-4-4 4-4"/><path d="M4 17h12a4 4 0 0 0 4-4v-1"/></svg>Übergang</button>
-        <button class="tab" data-tab="keyframes"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 2 22 12 12 22 2 12Z"/></svg>Keyframes</button>
-        <button class="tab" data-tab="overlay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>Overlay</button>
-        <button class="tab" data-tab="audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>Ton</button>
+        <button class="tab active" data-tab="effects">✨ Effekte</button>
+        <button class="tab" data-tab="transition">🔀 Übergang</button>
+        <button class="tab" data-tab="keyframes">◆ Keyframes</button>
+        <button class="tab" data-tab="overlay">🎭 Overlay</button>
+        <button class="tab" data-tab="audio">🎵 Ton</button>
       </div>
       <div class="tab-content" id="tabEffects"></div>
       <div class="tab-content hidden" id="tabTransition"></div>
@@ -727,7 +727,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 <div class="modal hidden" id="reportModal">
   <div class="modal-box">
-    <div class="modal-head"><h2>Projektbericht</h2><button class="modal-close" id="reportClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-head"><h2>Projektbericht</h2><button class="modal-close" id="reportClose">×</button></div>
     <div class="modal-body" id="reportBody"></div>
     <div class="modal-foot">
       <button class="btn" id="reportDownload">Als Datei herunterladen</button>
@@ -740,7 +740,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 <div class="modal hidden" id="exportSpeedModal">
   <div class="modal-box">
-    <div class="modal-head"><h2>Video exportieren</h2><button class="modal-close" id="exportSpeedCancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="modal-head"><h2>Video exportieren</h2><button class="modal-close" id="exportSpeedCancel">×</button></div>
     <div class="modal-body exp-modal-body" id="exportSpeedBody"></div>
     <div class="modal-foot">
       <button class="btn" id="exportSpeedCancelBtn2">Abbrechen</button>
@@ -856,6 +856,7 @@ let state = {
   projectName:'Unbenanntes Projekt',
   createdAt: Date.now(),
   canvasAspect:'16:9',
+  canvasBgColor:'#000000',
   clips: [],
   audioClips: [],
   overlays: [],
@@ -1000,6 +1001,7 @@ function snapshotState(){
   return {
     projectName: state.projectName,
     canvasAspect: state.canvasAspect,
+    canvasBgColor: state.canvasBgColor,
     selection: {...state.selection},
     clips: state.clips.map(c=>({
       id:c.id, name:c.name, duration:c.duration, trimIn:c.trimIn, trimOut:c.trimOut,
@@ -1021,6 +1023,9 @@ function applySnapshot(snap){
   state.projectName = snap.projectName;
   document.getElementById('projectName').value = snap.projectName;
   if(snap.canvasAspect !== state.canvasAspect) setCanvasAspect(snap.canvasAspect);
+  state.canvasBgColor = snap.canvasBgColor || '#000000';
+  const bgInput = document.getElementById('canvasBgColorInput');
+  if(bgInput) bgInput.value = state.canvasBgColor;
 
   // Video-Clips: bestehende Elemente wiederverwenden, wenn möglich (per id), sonst neu referenzieren
   const oldById = {}; state.clips.forEach(c=>oldById[c.id]=c);
@@ -1481,8 +1486,9 @@ const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 let bufCanvasA=null, bufCanvasB=null;
 
-// Hintergrund innerhalb des Canvas (Letterbox-Balken) ist immer schwarz, wie beim fertigen Export.
-function getBgColor(){ return '#000'; }
+// Hintergrund innerhalb des Canvas (Letterbox-Balken bei abweichendem Seitenverhältnis) ist frei wählbar
+// und wird 1:1 mit exportiert – Standard ist Schwarz.
+function getBgColor(){ return state.canvasBgColor || '#000000'; }
 
 function getBuf(name){
   let c = name==='A'?bufCanvasA:bufCanvasB;
@@ -1965,13 +1971,11 @@ function togglePlay(){
   } else {
     state.isPlaying=false; pauseAllMedia();
   }
-  document.getElementById('btnPlay').innerHTML = state.isPlaying
-    ? '<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 4.5v15l13-7.5Z"/></svg>';
+  document.getElementById('btnPlay').textContent = state.isPlaying ? '❚❚' : '▶';
 }
 function seekTo(t){
   state.isPlaying=false; pauseAllMedia();
-  document.getElementById('btnPlay').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 4.5v15l13-7.5Z"/></svg>';
+  document.getElementById('btnPlay').textContent='▶';
   state.playheadTime = clamp(t,0,timelineLength());
 }
 
@@ -2015,7 +2019,7 @@ function tickInner(){
         });
         if(blocked || active.length===0){
           state.isPlaying=false; pauseAllMedia();
-          document.getElementById('btnPlay').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 4.5v15l13-7.5Z"/></svg>';
+          document.getElementById('btnPlay').textContent='▶';
         } else {
           const primary = active[0];
           const local = primary.clip.videoEl.currentTime - primary.clip.trimIn;
@@ -2032,7 +2036,7 @@ function tickInner(){
       syncAudioClips(true, state.playheadTime, speed);
     } else {
       state.isPlaying=false; pauseAllMedia();
-      document.getElementById('btnPlay').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 4.5v15l13-7.5Z"/></svg>';
+      document.getElementById('btnPlay').textContent='▶';
       if(state.isExporting) finishExportRecording();
     }
   }
@@ -2052,6 +2056,11 @@ document.getElementById('volumeRange').addEventListener('input', e=>{
   state.audioClips.forEach(a=>{ if(a.gainNode) a.gainNode.gain.value = v*(a.volume/100); });
 });
 document.getElementById('aspectSelect').addEventListener('change', e=>{ setCanvasAspect(e.target.value); pushHistory(); });
+document.getElementById('canvasBgColorInput').addEventListener('input', e=>{
+  state.canvasBgColor = e.target.value;
+  renderFrame(); queueAutosave();
+});
+document.getElementById('canvasBgColorInput').addEventListener('change', ()=>{ pushHistory(); });
 
 /* ===================== Tastenkürzel ===================== */
 window.addEventListener('keydown', e=>{
@@ -2514,12 +2523,12 @@ function renderMediaList(){
     const item = document.createElement('div');
     item.className='media-item'+(state.selection.type==='video'&&c.id===state.selection.id?' selected':'');
     item.innerHTML = `
-      ${c.thumb? `<img class="media-thumb" src="${c.thumb}">` : `<div class="media-thumb missing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="2.5" y="5" width="14" height="14" rx="2.5"/><path d="M21.5 8.2 16.5 11.2v1.6l5 3v-6.6Z"/></svg></div>`}
+      ${c.thumb? `<img class="media-thumb" src="${c.thumb}">` : `<div class="media-thumb missing">▶</div>`}
       <div class="media-info"><div class="media-name">${escapeHtml(c.name)}</div><div class="media-dur">${fmtTime(clipDuration(c))}</div></div>
       <div class="media-actions">
-        <button class="icon-btn mv-up" title="Nach vorne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-        <button class="icon-btn mv-down" title="Nach hinten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
-        <button class="icon-btn del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <button class="icon-btn mv-up" title="Nach vorne">↑</button>
+        <button class="icon-btn mv-down" title="Nach hinten">↓</button>
+        <button class="icon-btn del" title="Entfernen">✕</button>
       </div>`;
     item.addEventListener('click', (e)=>{
       if(e.target.closest('.icon-btn')) return;
@@ -2569,9 +2578,9 @@ function renderAudioList(){
     const item = document.createElement('div');
     item.className='media-item audio-type'+(state.selection.type==='audio'&&a.id===state.selection.id?' selected':'');
     item.innerHTML = `
-      <div class="media-thumb missing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
+      <div class="media-thumb missing">♪</div>
       <div class="media-info"><div class="media-name">${escapeHtml(a.name)}</div><div class="media-dur">${fmtTime(a.trimOut-a.trimIn)} · ab ${fmtTime(a.startTime)}</div></div>
-      <div class="media-actions"><button class="icon-btn del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+      <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
     item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('audio', a.id); });
     item.addEventListener('contextmenu', (e)=>{
       e.preventDefault(); e.stopPropagation();
@@ -2595,7 +2604,7 @@ function renderOverlayList(){
     const thumb = o.kind==='image' ? `<img class="media-thumb" src="${o.content||''}">` : `<div class="media-thumb emoji">${o.kind==='sticker'?o.content:'T'}</div>`;
     const label = o.kind==='text' ? (o.content||'Text') : (o.kind==='sticker'? 'Sticker' : 'Bild');
     item.innerHTML = `${thumb}<div class="media-info"><div class="media-name">${escapeHtml(label)}</div><div class="media-dur">${fmtTime(o.start)}–${fmtTime(o.end)}</div></div>
-      <div class="media-actions"><button class="icon-btn del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+      <div class="media-actions"><button class="icon-btn del" title="Entfernen">✕</button></div>`;
     item.addEventListener('click', (e)=>{ if(e.target.closest('.icon-btn')) return; selectItem('overlay', o.id); });
     item.addEventListener('contextmenu', (e)=>{
       e.preventDefault(); e.stopPropagation();
@@ -2644,7 +2653,7 @@ function renderVideoTrack(){
     block.style.left=left+'px'; block.style.width=w+'px';
     block.innerHTML = `
       <div class="blk-body"><div class="blk-title">${escapeHtml(c.name)}</div><div class="blk-dur">${fmtTime(clipDuration(c))}</div></div>
-      <button class="blk-top-btn blk-del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" width="10" height="10"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
       <button class="blk-top-btn blk-dup" title="Duplizieren">⧉</button>
       <div class="blk-kf-row"></div>
       <div class="blk-handle left"></div>
@@ -2705,8 +2714,8 @@ function renderAudioTrack(){
     block.className='blk audio-blk'+(state.selection.type==='audio'&&a.id===state.selection.id?' selected':'');
     block.style.left=left+'px'; block.style.width=w+'px';
     block.innerHTML = `
-      <div class="blk-body"><div class="blk-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" style="flex-shrink:0"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg> ${escapeHtml(a.name)}</div><div class="blk-dur">${fmtTime(a.trimOut-a.trimIn)}</div></div>
-      <button class="blk-top-btn blk-del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" width="10" height="10"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="blk-body"><div class="blk-title">♪ ${escapeHtml(a.name)}</div><div class="blk-dur">${fmtTime(a.trimOut-a.trimIn)}</div></div>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
       <div class="blk-handle left"></div>
       <div class="blk-handle right"></div>`;
     block.addEventListener('click', (e)=>{
@@ -2746,7 +2755,7 @@ function renderOverlayTrack(){
     block.style.left=left+'px'; block.style.width=w+'px';
     block.innerHTML = `
       <div class="blk-body"><div class="blk-title">${escapeHtml(label)}</div><div class="blk-dur">${fmtTime(o.end-o.start)}</div></div>
-      <button class="blk-top-btn blk-del" title="Entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" width="10" height="10"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button class="blk-top-btn blk-del" title="Entfernen">✕</button>
       <div class="blk-kf-row"></div>
       <div class="blk-handle left"></div>
       <div class="blk-handle right"></div>`;
@@ -3057,7 +3066,7 @@ function renderKfBar(){
   bar.innerHTML = `
     <button class="kf-btn kf-add" title="Aktuelle Größe/Position/Effekte als Keyframe setzen">◆ Keyframe</button>
     <div class="kf-track" id="kfTrack"><div class="kf-cursor" style="left:${pct(curLocal)}%"></div>${dots}</div>
-    <button class="kf-btn kf-del" title="Keyframe an aktueller Position entfernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" width="11" height="11"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button class="kf-btn kf-del" title="Keyframe an aktueller Position entfernen">✕</button>
     <button class="kf-btn kf-clear" title="Alle Keyframes löschen">Zurücksetzen</button>
     <span class="kf-count">${kfs.length} Keyframe${kfs.length!==1?'s':''}</span>`;
   bar.querySelector('.kf-add').addEventListener('click', addKeyframeNow);
@@ -3212,7 +3221,7 @@ function renderKeyframesTab(){
       if(k.v.rotation!==undefined) parts.push('Drehung '+Math.round(k.v.rotation)+'°');
       if(k.v.x!==undefined) parts.push('Pos '+Math.round(k.v.x)+'/'+Math.round(k.v.y)+'%');
     }
-    item.innerHTML = `<span class="t">${k.t.toFixed(1)}s</span><span class="v">${parts.join(' · ')||'Keyframe'}</span><button title="Löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" width="10" height="10"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+    item.innerHTML = `<span class="t">${k.t.toFixed(1)}s</span><span class="v">${parts.join(' · ')||'Keyframe'}</span><button title="Löschen">✕</button>`;
     item.addEventListener('click', (e)=>{ if(e.target.tagName==='BUTTON') return; seekTo(startAbs+k.t); renderAll(); });
     item.querySelector('button').addEventListener('click', (e)=>{ e.stopPropagation(); kfs.splice(idx,1); queueAutosave(); pushHistory(); renderAll(); });
     group.appendChild(item);
@@ -3499,7 +3508,7 @@ async function buildProjectMetadata(){
   }));
   return {
     version:4, projectName: state.projectName, createdAt: state.createdAt, savedAt: Date.now(),
-    canvasAspect: state.canvasAspect, canvasW: canvas.width, canvasH: canvas.height,
+    canvasAspect: state.canvasAspect, canvasBgColor: state.canvasBgColor, canvasW: canvas.width, canvasH: canvas.height,
     exportHistory: state.exportHistory, clips, audioClips, overlays,
   };
 }
@@ -3534,6 +3543,9 @@ function loadProjectFromData(data){
   state.exportHistory = data.exportHistory || [];
   document.getElementById('projectName').value = state.projectName;
   setCanvasAspect(data.canvasAspect || '16:9');
+  state.canvasBgColor = data.canvasBgColor || '#000000';
+  const bgInputLoad = document.getElementById('canvasBgColorInput');
+  if(bgInputLoad) bgInputLoad.value = state.canvasBgColor;
   if(data.canvasW && data.canvasH){ canvas.width=data.canvasW; canvas.height=data.canvasH; }
 
   state.clips = (data.clips||[]).map(m=>{
@@ -3784,6 +3796,7 @@ function buildReportText(){
   lines.push(`================`);
   lines.push(`Projektname:      ${state.projectName}`);
   lines.push(`Format:           ${state.canvasAspect} (${canvas.width}×${canvas.height}px)`);
+  lines.push(`Hintergrundfarbe: ${state.canvasBgColor}`);
   lines.push(`Erstellt am:      ${new Date(state.createdAt).toLocaleString('de-DE')}`);
   lines.push(`Zuletzt gespeichert: ${state.lastSavedAt? new Date(state.lastSavedAt).toLocaleString('de-DE') : '–'}`);
   lines.push(`Gesamtlänge:      ${fmtTime(timelineLength())}`);
